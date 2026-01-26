@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0b0b0d;
+  --card: #0f1720;
+  --muted: #9aa7b2;
+  --accent: #1e90ff;
+  --text: #e6eef6;
+  --danger: #ff6b6b;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
+  padding-top: 0;
+}
+
+/* Layout utilities */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+}
+
+.header-inner { display: flex; gap: 12px; align-items: center; }
+
+.site-title { font-size: 18px; font-weight: 700; margin: 0; color: var(--text); }
+
+.site-nav { display: flex; align-items: center; gap: 10px; }
+
+.site-nav a { color: var(--muted); text-decoration: none; font-weight: 600; }
+
+content { padding: 20px 0 60px 0; }
+
+/* Buttons and forms */
+input, textarea, select {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.04);
+  padding: 10px;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button { background: var(--accent); color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+button[disabled]{ opacity: 0.6; cursor: not-allowed; }
+
+.logout-button{ background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.04); padding:6px 10px; border-radius:6px; }
+.logout-button:hover{ background:rgba(255,255,255,0.02); color:var(--text); }
+
+.nav-button{ background:transparent; color:var(--muted); border:1px solid transparent; padding:6px 10px; border-radius:6px; text-decoration:none; }
+.nav-button:hover{ color:var(--text); background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.04); }
+
+.user-status small{ color:var(--muted); opacity:0.95; }
+
+/* Dark card */
+.card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+
+.request-form { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; }
+
+@media (max-width: 640px) { .header-inner { flex-direction: column; align-items: flex-start; gap: 12px; } .site-nav a { margin-left: 10px; } }
