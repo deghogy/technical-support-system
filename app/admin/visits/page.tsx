@@ -72,7 +72,6 @@ export default async function VisitsPage() {
                   </p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', minWidth: '220px' }}>
-                  <QRCode url={`${getBaseUrl()}/admin/visits?id=${visit.id}`} />
                   <VisitRecorder id={visit.id} />
                 </div>
               </div>

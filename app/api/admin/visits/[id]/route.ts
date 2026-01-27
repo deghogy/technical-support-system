@@ -31,6 +31,7 @@ export async function POST(
     const actual_start_time = formData.get('actual_start_time')
     const actual_end_time = formData.get('actual_end_time')
     const technician_notes = formData.get('technician_notes')
+    const document = formData.get('document') as File | null
 
     // Validate visit recording data
     const validationResult = visitRecordingSchema.safeParse({
@@ -49,11 +50,54 @@ export async function POST(
 
     const validatedData = validationResult.data
 
-    const updatePayload = {
+    const updatePayload: any = {
       actual_start_time: validatedData.actual_start_time,
       actual_end_time: validatedData.actual_end_time,
       technician_notes: validatedData.technician_notes || null,
       visit_status: 'visit-completed',
+    }
+
+    // Handle document upload if provided
+    if (document) {
+      try {
+        const buffer = await document.arrayBuffer()
+        const uint8Array = new Uint8Array(buffer)
+        
+        // Generate unique filename
+        const timestamp = Date.now()
+        const filename = `${id}/${timestamp}-${document.name}`
+
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('visit-documents')
+          .upload(filename, uint8Array, {
+            contentType: document.type,
+            upsert: false,
+          })
+
+        if (uploadError) {
+          logger.error({ error: uploadError, id }, 'Failed to upload document')
+          return NextResponse.json(
+            { message: 'Failed to upload document', details: uploadError.message },
+            { status: 500 }
+          )
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('visit-documents')
+          .getPublicUrl(filename)
+
+        updatePayload.document_url = urlData?.publicUrl
+
+        logger.info({ id, filename }, 'Document uploaded successfully')
+      } catch (uploadError) {
+        logger.error({ error: uploadError, id }, 'Document upload error')
+        return NextResponse.json(
+          { message: 'Failed to upload document' },
+          { status: 500 }
+        )
+      }
     }
 
     const { error } = await supabase

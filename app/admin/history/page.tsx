@@ -24,6 +24,10 @@ export default function HistoryPage() {
     }
 
     loadHistory()
+
+    // Auto-refresh history every 5 seconds to show new completed visits
+    const interval = setInterval(loadHistory, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   const filteredRequests = requests.filter((r) => {
@@ -100,6 +104,9 @@ export default function HistoryPage() {
         filteredRequests.map(r => (
           <div key={r.id} className="card">
             <p style={{ margin: 0 }}><b>{r.requester_name}</b> <small style={{ color: 'var(--muted)' }}>({r.requester_email})</small></p>
+            <p style={{ margin: '4px 0', color: 'var(--muted)', fontSize: '12px' }}>
+              🆔 Visit ID: <code style={{ background: 'var(--card)', padding: '2px 6px', borderRadius: '4px' }}>{r.id}</code>
+            </p>
             <p style={{ margin: '4px 0', color: 'var(--muted)', fontSize: '14px' }}>📍 {r.site_location}</p>
             <p style={{ margin: '8px 0' }}>
               <b>Status:</b>{' '}

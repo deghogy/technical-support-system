@@ -94,7 +94,7 @@ export default function ConfirmVisitPage() {
 
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
         <div style={{ textAlign: 'center' }}>
-          <QRCode url={typeof window !== 'undefined' ? window.location.href : ''} />
+          <QRCode url={`https://technical-support-system.vercel.app/confirm-visit/${id}`} />
           <p style={{ color: 'var(--muted)', fontSize: '12px', marginTop: 8 }}>Scan this QR code to share confirmation</p>
         </div>
       </div>
@@ -125,6 +125,30 @@ export default function ConfirmVisitPage() {
             <br />
             {visit.technician_notes}
           </p>
+        )}
+        {visit.document_url && (
+          <div style={{ margin: '12px 0 0 0', padding: '8px', backgroundColor: 'rgba(30, 144, 255, 0.05)', borderRadius: '4px', borderLeft: '3px solid var(--accent)' }}>
+            <p style={{ margin: 0, marginBottom: 8 }}>
+              <b>📎 Attached Document</b>
+            </p>
+            <a 
+              href={visit.document_url} 
+              download
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                backgroundColor: 'var(--accent)',
+                color: '#fff',
+                textDecoration: 'none',
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}
+            >
+              ⬇️ Download Document
+            </a>
+          </div>
         )}
       </div>
 

@@ -7,8 +7,18 @@ export default function VisitRecorder({ id }: { id: string }) {
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [notes, setNotes] = useState('')
+  const [document, setDocument] = useState<File | null>(null)
+  const [documentPreview, setDocumentPreview] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  function handleDocumentChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      setDocument(file)
+      setDocumentPreview(`${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -19,6 +29,9 @@ export default function VisitRecorder({ id }: { id: string }) {
     body.append('actual_start_time', startTime)
     body.append('actual_end_time', endTime)
     body.append('technician_notes', notes)
+    if (document) {
+      body.append('document', document)
+    }
 
     try {
       const res = await fetch(`/api/admin/visits/${id}`, {
@@ -84,6 +97,21 @@ export default function VisitRecorder({ id }: { id: string }) {
             />
           </label>
 
+          <label style={{ display: 'block', marginBottom: 8 }}>
+            <small style={{ color: 'var(--muted)' }}>Attach document (PDF, Image, or Word) - Optional</small>
+            <input
+              type="file"
+              onChange={handleDocumentChange}
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              style={{ display: 'block', marginTop: 4 }}
+            />
+            {documentPreview && (
+              <small style={{ color: 'var(--accent)', display: 'block', marginTop: 4 }}>
+                ✓ {documentPreview}
+              </small>
+            )}
+          </label>
+
           <button type="submit" disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Saving...' : 'Save Visit Record'}
           </button>
@@ -94,3 +122,4 @@ export default function VisitRecorder({ id }: { id: string }) {
     </div>
   )
 }
+

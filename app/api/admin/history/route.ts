@@ -26,8 +26,7 @@ export async function GET(request: Request) {
   const { data: requests } = await supabase
     .from('site_visit_requests')
     .select('*')
-    .in('status', ['approved', 'rejected'])
-    .order('approved_at', { ascending: false })
+    .order('created_at', { ascending: false })
 
   return NextResponse.json({ requests: requests || [] })
 }
