@@ -72,6 +72,9 @@ export default async function Header() {
               <Link href="/admin/history" style={{ color: 'var(--muted)', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
                 History
               </Link>
+              <Link href="/admin/quotas" style={{ color: 'var(--muted)', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
+                Quotas
+              </Link>
             </>
           )}
           {user && userRole === 'approver' && (

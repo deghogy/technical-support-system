@@ -107,14 +107,14 @@ export default function Home() {
                 required
               />
 
-              <input
-                name="email"
-                type="email"
-                placeholder="Your email"
-                required
-              />
-
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="Your email"
+                  required
+                  style={{ flex: 1 }}
+                />
                 <button
                   type="button"
                   onClick={checkQuota}
@@ -123,14 +123,16 @@ export default function Home() {
                     background: 'transparent',
                     border: '1px solid rgba(255,255,255,0.2)',
                     color: 'var(--muted)',
-                    padding: '8px 12px',
+                    padding: '10px 16px',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    fontSize: '12px',
-                    flex: 1,
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap',
+                    height: '40px',
                   }}
                 >
-                  {checkingQuota ? 'Checking...' : 'Check My Quota'}
+                  {checkingQuota ? 'Checking...' : '📊 Check Quota'}
                 </button>
               </div>
 

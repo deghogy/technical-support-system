@@ -53,6 +53,8 @@ export default function QuotasPageClient() {
         }),
       })
 
+      const data = await res.json()
+
       if (res.ok) {
         setMessage(`✓ Quota updated for ${formEmail}`)
         setFormEmail('')
@@ -60,11 +62,12 @@ export default function QuotasPageClient() {
         setShowForm(false)
         await loadData()
       } else {
-        setMessage('Failed to save quota')
+        setMessage(data.message || 'Failed to save quota')
+        console.error('Quota save error:', data)
       }
     } catch (error) {
       console.error(error)
-      setMessage('Error saving quota')
+      setMessage(error instanceof Error ? error.message : 'Error saving quota')
     } finally {
       setSaving(false)
     }
