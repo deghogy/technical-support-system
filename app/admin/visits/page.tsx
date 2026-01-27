@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import VisitRecorder from '@/components/VisitRecorder'
 import QRCode from '@/components/QRCode'
+import { getBaseUrl } from '@/lib/env'
 
 export default async function VisitsPage() {
   const supabase = await createSupabaseServerClient()
@@ -30,7 +31,7 @@ export default async function VisitsPage() {
     .from('site_visit_requests')
     .select('*')
     .eq('status', 'approved')
-    .neq('scheduled_date', null)
+    .not('scheduled_date', 'is', null)
     .is('actual_start_time', null)
     .order('scheduled_date', { ascending: true })
 
@@ -39,7 +40,7 @@ export default async function VisitsPage() {
     .from('site_visit_requests')
     .select('*')
     .eq('status', 'approved')
-    .neq('actual_start_time', null)
+    .not('actual_start_time', 'is', null)
     .is('customer_confirmed_at', null)
     .order('actual_start_time', { ascending: false })
 
@@ -71,7 +72,7 @@ export default async function VisitsPage() {
                   </p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', minWidth: '220px' }}>
-                  <QRCode url={`${process.env.NEXT_PUBLIC_BASE_URL}/admin/visits?id=${visit.id}`} />
+                  <QRCode url={`${getBaseUrl()}/admin/visits?id=${visit.id}`} />
                   <VisitRecorder id={visit.id} />
                 </div>
               </div>
@@ -114,7 +115,7 @@ export default async function VisitsPage() {
                   </p>
                 </div>
                 <div style={{ textAlign: 'center', minWidth: '220px' }}>
-                  <QRCode url={`${process.env.NEXT_PUBLIC_BASE_URL}/confirm-visit/${visit.id}`} />
+                  <QRCode url={`${getBaseUrl()}/confirm-visit/${visit.id}`} />
                 </div>
               </div>
             </div>

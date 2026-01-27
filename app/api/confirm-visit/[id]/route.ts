@@ -22,7 +22,7 @@ export async function GET(
     .select('*')
     .eq('id', id)
     .eq('status', 'approved')
-    .neq('actual_start_time', null)
+    .not('actual_start_time', 'is', null)
     .is('customer_confirmed_at', null)
     .single()
 
