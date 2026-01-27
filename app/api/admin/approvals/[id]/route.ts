@@ -127,20 +127,3 @@ export async function POST(
     )
   }
 }
-
-      await sendScheduleConfirmationEmail({
-        customerEmail: requestData.requester_email,
-        requesterName: requestData.requester_name,
-        siteLocation: requestData.site_location,
-        scheduledDate: formattedDate,
-        durationHours: duration_hours ? Number(duration_hours) : requestData.estimated_hours,
-        trackingLink: `${process.env.NEXT_PUBLIC_BASE_URL}/track-request`,
-      })
-    } catch (emailError) {
-      console.error('Failed to send confirmation email:', emailError)
-      // Don't fail the approval if email fails
-    }
-  }
-
-  return NextResponse.redirect(new URL('/admin/approvals', request.url))
-}

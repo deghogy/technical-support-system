@@ -56,7 +56,7 @@ export async function sendApprovalNotificationEmail({
     })
 
     logger.info(
-      { result: result.id, adminEmail, requestId },
+      { result: result.data?.id || 'sent', adminEmail, requestId },
       'Approval notification email sent successfully'
     )
     return result
@@ -111,7 +111,7 @@ export async function sendScheduleConfirmationEmail({
     })
 
     logger.info(
-      { result: result.id, email: customerEmail },
+      { result: result.data?.id || 'sent', email: customerEmail },
       'Schedule confirmation email sent'
     )
     return result
@@ -158,7 +158,7 @@ export async function sendVisitCompletionEmail({
     })
 
     logger.info(
-      { result: result.id, email: customerEmail },
+      { result: result.data?.id || 'sent', email: customerEmail },
       'Visit completion email sent'
     )
     return result
