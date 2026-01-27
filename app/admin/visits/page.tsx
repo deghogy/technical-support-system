@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import VisitRecorder from '@/components/VisitRecorder'
+import VisitRejector from '@/components/VisitRejector'
 import QRCode from '@/components/QRCode'
 import { getBaseUrl } from '@/lib/env'
 
@@ -73,6 +74,7 @@ export default async function VisitsPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', minWidth: '220px' }}>
                   <VisitRecorder id={visit.id} />
+                  <VisitRejector id={visit.id} />
                 </div>
               </div>
             </div>
