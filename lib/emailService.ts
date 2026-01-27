@@ -70,14 +70,14 @@ export async function sendApprovalNotificationEmail({
 }
 
 export async function sendScheduleConfirmationEmail({
-  customerEmail,
+  adminEmail,
   requesterName,
   siteLocation,
   scheduledDate,
   durationHours,
   trackingLink,
 }: {
-  customerEmail: string
+  adminEmail: string
   requesterName: string
   siteLocation: string
   scheduledDate: string
@@ -88,8 +88,8 @@ export async function sendScheduleConfirmationEmail({
     const resend = getResendClient()
     const result = await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to: customerEmail,
-      subject: `Boccard Visit Scheduled: ${siteLocation}`,
+      to: adminEmail,
+      subject: 'Boccard Visit Scheduled',
       html: `
         <h2>A Visit Has Been Scheduled</h2>
         <p>Hi ${requesterName},</p>
@@ -111,13 +111,13 @@ export async function sendScheduleConfirmationEmail({
     })
 
     logger.info(
-      { result: result.data?.id || 'sent', email: customerEmail },
+      { result: result.data?.id || 'sent', email: adminEmail },
       'Schedule confirmation email sent'
     )
     return result
   } catch (error) {
     logger.error(
-      { error, email: customerEmail },
+      { error, email: adminEmail },
       'Failed to send schedule confirmation email'
     )
     throw error
@@ -125,12 +125,12 @@ export async function sendScheduleConfirmationEmail({
 }
 
 export async function sendVisitCompletionEmail({
-  customerEmail,
+  adminEmail,
   requesterName,
   siteLocation,
   confirmationLink,
 }: {
-  customerEmail: string
+  adminEmail: string
   requesterName: string
   siteLocation: string
   confirmationLink: string
@@ -139,8 +139,8 @@ export async function sendVisitCompletionEmail({
     const resend = getResendClient()
     const result = await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to: customerEmail,
-      subject: `Visit Complete: Please Confirm - ${siteLocation}`,
+      to: adminEmail,
+      subject: 'Boccard Visit Confirmed',
       html: `
         <h2>Site Visit Completed</h2>
         <p>Hi ${requesterName},</p>
@@ -158,13 +158,13 @@ export async function sendVisitCompletionEmail({
     })
 
     logger.info(
-      { result: result.data?.id || 'sent', email: customerEmail },
+      { result: result.data?.id || 'sent', email: adminEmail },
       'Visit completion email sent'
     )
     return result
   } catch (error) {
     logger.error(
-      { error, email: customerEmail },
+      { error, email: adminEmail },
       'Failed to send visit completion email'
     )
     throw error

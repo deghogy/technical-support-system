@@ -6,6 +6,8 @@ import logger from '@/lib/logger'
 import { requireRole } from '@/lib/middleware'
 import { getBaseUrl } from '@/lib/env'
 
+const FALLBACK_ADMIN_EMAIL = process.env.FALLBACK_ADMIN_EMAIL || 'suboccardindonesia@gmail.com'
+
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -18,6 +20,8 @@ export async function POST(
     if (roleCheck.error) {
       return NextResponse.json({ message: roleCheck.error }, { status: roleCheck.status })
     }
+
+    const user = roleCheck.user!
 
     let supabase
     try {
@@ -126,7 +130,7 @@ export async function POST(
       if (requestData && requestData.status === 'approved') {
         const confirmationLink = `${getBaseUrl()}/confirm-visit/${id}`
         await sendVisitCompletionEmail({
-          customerEmail: requestData.requester_email,
+          adminEmail: user.email || FALLBACK_ADMIN_EMAIL,
           requesterName: requestData.requester_name,
           siteLocation: requestData.site_location,
           confirmationLink,

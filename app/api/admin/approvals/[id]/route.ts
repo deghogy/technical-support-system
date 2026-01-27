@@ -7,6 +7,8 @@ import { requireRole } from '@/lib/middleware'
 import { getTimezone } from '@/lib/timezone'
 import { getBaseUrl } from '@/lib/env'
 
+const FALLBACK_ADMIN_EMAIL = process.env.FALLBACK_ADMIN_EMAIL || 'suboccardindonesia@gmail.com'
+
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -106,7 +108,7 @@ export async function POST(
         })
 
         await sendScheduleConfirmationEmail({
-          customerEmail: requestData.requester_email,
+          adminEmail: user.email || FALLBACK_ADMIN_EMAIL,
           requesterName: requestData.requester_name,
           siteLocation: requestData.site_location,
           scheduledDate: formattedDate,
