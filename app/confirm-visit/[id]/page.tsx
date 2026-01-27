@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { formatDateGMT7 } from '@/lib/dateFormatter'
-import QRCode from '@/components/QRCode'
 
 export default function ConfirmVisitPage() {
   const params = useParams()
@@ -90,13 +89,6 @@ export default function ConfirmVisitPage() {
         <p style={{ color: 'var(--muted)', margin: '8px 0 0 0' }}>
           Please confirm that the technician visited your site and the work was completed.
         </p>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-        <div style={{ textAlign: 'center' }}>
-          <QRCode url={`https://technical-support-system.vercel.app/confirm-visit/${id}`} />
-          <p style={{ color: 'var(--muted)', fontSize: '12px', marginTop: 8 }}>Scan this QR code to share confirmation</p>
-        </div>
       </div>
 
       <div className="card">

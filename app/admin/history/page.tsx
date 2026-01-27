@@ -32,9 +32,9 @@ export default function HistoryPage() {
 
   const filteredRequests = requests.filter((r) => {
     if (filter === 'all') return true
-    if (filter === 'approved') return r.status === 'approved'
+    if (filter === 'approved') return r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed'
     if (filter === 'rejected') return r.status === 'rejected'
-    if (filter === 'scheduled') return r.status === 'approved' && r.scheduled_date
+    if (filter === 'scheduled') return r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed'
     if (filter === 'confirmed') return r.visit_status === 'confirmed'
     return true
   })
