@@ -1,34 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabaseServer'
+import { useEffect, useState } from 'react'
 
-export default async function QuotasPage() {
-  const supabase = await createSupabaseServerClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    redirect('/')
-  }
-
-  return <QuotasPageClient />
-}
-
-function QuotasPageClient() {
+export default function QuotasPageClient() {
   const [quotas, setQuotas] = useState<any[]>([])
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,6 +69,7 @@ function QuotasPageClient() {
       setSaving(false)
     }
   }
+
 
   return (
     <main style={{ maxWidth: 1000, margin: '40px auto', padding: '0 20px' }}>
