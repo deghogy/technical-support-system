@@ -3,6 +3,7 @@ import { createSupabaseRouteClient } from '@/lib/supabaseRoute'
 import { createSiteVisitRequestSchema } from '@/lib/schemas'
 import logger from '@/lib/logger'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { getBaseUrl } from '@/lib/env'
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     if (adminEmails.length > 0 && insertedData?.[0]?.id) {
       try {
         // Use absolute URL for internal API call
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+        const baseUrl = getBaseUrl()
         await fetch(`${baseUrl}/api/request/notify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

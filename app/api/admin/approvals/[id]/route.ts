@@ -5,6 +5,7 @@ import { approvalSchema } from '@/lib/schemas'
 import logger from '@/lib/logger'
 import { requireRole } from '@/lib/middleware'
 import { getTimezone } from '@/lib/timezone'
+import { getBaseUrl } from '@/lib/env'
 
 export async function POST(
   request: NextRequest,
@@ -49,6 +50,8 @@ export async function POST(
       )
     }
 
+    const validatedData = validationResult.data
+
     // Get the request details for email
     const { data: requestData } = await supabase
       .from('site_visit_requests')
@@ -62,17 +65,17 @@ export async function POST(
     }
 
     const updatePayload: any = {
-      status: validationResult.data.status,
+      status: validatedData.status,
       approved_by: user.email,
       approved_at: new Date().toISOString(),
     }
 
-    if (validationResult.data.status === 'approved') {
+    if (validatedData.status === 'approved') {
       updatePayload.visit_status = 'scheduled'
     }
 
-    if (validationResult.data.scheduled_date) updatePayload.scheduled_date = validationResult.data.scheduled_date
-    if (validationResult.data.duration_hours) updatePayload.duration_hours = validationResult.data.duration_hours
+    if (validatedData.scheduled_date) updatePayload.scheduled_date = validatedData.scheduled_date
+    if (validatedData.duration_hours) updatePayload.duration_hours = validatedData.duration_hours
 
     const { error } = await supabase
       .from('site_visit_requests')
@@ -87,13 +90,13 @@ export async function POST(
       )
     }
 
-    logger.info({ id, status: validationResult.data.status, approvedBy: user.email }, 'Request approval updated')
+    logger.info({ id, status: validatedData.status, approvedBy: user.email }, 'Request approval updated')
 
     // Send email to customer if approved and scheduled
-    if (validationResult.data.status === 'approved' && validationResult.data.scheduled_date) {
+    if (validatedData.status === 'approved' && validatedData.scheduled_date) {
       try {
         const timezone = getTimezone()
-        const formattedDate = new Date(validationResult.data.scheduled_date as string).toLocaleDateString('en-US', {
+        const formattedDate = new Date(validatedData.scheduled_date as string).toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',
           day: 'numeric',
@@ -107,8 +110,8 @@ export async function POST(
           requesterName: requestData.requester_name,
           siteLocation: requestData.site_location,
           scheduledDate: formattedDate,
-          durationHours: validationResult.data.duration_hours ? Number(validationResult.data.duration_hours) : requestData.estimated_hours,
-          trackingLink: `${process.env.NEXT_PUBLIC_BASE_URL}/track-request`,
+          durationHours: validatedData.duration_hours ? Number(validatedData.duration_hours) : requestData.estimated_hours,
+          trackingLink: `${getBaseUrl()}/track-request`,
         })
 
         logger.info({ id, email: requestData.requester_email }, 'Schedule confirmation email sent')

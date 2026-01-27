@@ -4,6 +4,7 @@ import { sendVisitCompletionEmail } from '@/lib/emailService'
 import { visitRecordingSchema } from '@/lib/schemas'
 import logger from '@/lib/logger'
 import { requireRole } from '@/lib/middleware'
+import { getBaseUrl } from '@/lib/env'
 
 export async function POST(
   request: NextRequest,
@@ -46,10 +47,12 @@ export async function POST(
       )
     }
 
+    const validatedData = validationResult.data
+
     const updatePayload = {
-      actual_start_time: validationResult.data.actual_start_time,
-      actual_end_time: validationResult.data.actual_end_time,
-      technician_notes: validationResult.data.technician_notes || null,
+      actual_start_time: validatedData.actual_start_time,
+      actual_end_time: validatedData.actual_end_time,
+      technician_notes: validatedData.technician_notes || null,
       visit_status: 'visit-completed',
     }
 
@@ -77,7 +80,7 @@ export async function POST(
         .single()
 
       if (requestData) {
-        const confirmationLink = `${process.env.NEXT_PUBLIC_BASE_URL}/confirm-visit/${id}`
+        const confirmationLink = `${getBaseUrl()}/confirm-visit/${id}`
         await sendVisitCompletionEmail({
           customerEmail: requestData.requester_email,
           requesterName: requestData.requester_name,

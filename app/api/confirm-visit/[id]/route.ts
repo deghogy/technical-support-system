@@ -42,49 +42,60 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params
-  const body = await request.json()
-
-  // Validate confirmation data
-  const validationResult = visitConfirmationSchema.safeParse({
-    customer_notes: body.customer_notes,
-  })
-
-  if (!validationResult.success) {
-    logger.info({ errors: validationResult.error.errors, id }, 'Visit confirmation validation failed')
-    return NextResponse.json(
-      { message: 'Invalid confirmation data', errors: validationResult.error.errors },
-      { status: 400 }
-    )
-  }
-
-  let supabase
+  
   try {
-    supabase = await createSupabaseRouteClient()
-  } catch (err: any) {
-    logger.error({ error: err?.message ?? err }, 'Failed to create Supabase route client')
-    return NextResponse.json({ message: 'Supabase configuration missing' }, { status: 500 })
-  }
+    const body = await request.json()
 
-  const { error } = await supabase
-    .from('site_visit_requests')
-    .update({
-      customer_confirmed_at: new Date().toISOString(),
-      customer_notes: validationResult.data.customer_notes || null,
-      visit_status: 'confirmed',
+    // Validate confirmation data
+    const validationResult = visitConfirmationSchema.safeParse({
+      customer_notes: body.customer_notes,
     })
-    .eq('id', id)
-    .eq('status', 'approved')
-    .is('customer_confirmed_at', null)
 
-  if (error) {
-    logger.error({ error, id }, 'Database update error during visit confirmation')
+    if (!validationResult.success) {
+      logger.info({ errors: validationResult.error.errors, id }, 'Visit confirmation validation failed')
+      return NextResponse.json(
+        { message: 'Invalid confirmation data', errors: validationResult.error.errors },
+        { status: 400 }
+      )
+    }
+
+    const validatedData = validationResult.data
+
+    let supabase
+    try {
+      supabase = await createSupabaseRouteClient()
+    } catch (err: any) {
+      logger.error({ error: err?.message ?? err }, 'Failed to create Supabase route client')
+      return NextResponse.json({ message: 'Supabase configuration missing' }, { status: 500 })
+    }
+
+    const { error } = await supabase
+      .from('site_visit_requests')
+      .update({
+        customer_confirmed_at: new Date().toISOString(),
+        customer_notes: validatedData.customer_notes || null,
+        visit_status: 'confirmed',
+      })
+      .eq('id', id)
+      .eq('status', 'approved')
+      .is('customer_confirmed_at', null)
+
+    if (error) {
+      logger.error({ error, id }, 'Database update error during visit confirmation')
+      return NextResponse.json(
+        { message: 'Failed to confirm visit', details: error.message },
+        { status: 500 }
+      )
+    }
+
+    logger.info({ id, visitStatus: 'confirmed' }, 'Visit confirmed by customer')
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    logger.error({ error }, 'Unexpected error in visit confirmation route')
     return NextResponse.json(
-      { message: 'Failed to confirm visit', details: error.message },
+      { message: 'Internal server error' },
       { status: 500 }
     )
   }
-
-  logger.info({ id, visitStatus: 'confirmed' }, 'Visit confirmed by customer')
-
-  return NextResponse.json({ success: true })
 }

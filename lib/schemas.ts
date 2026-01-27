@@ -27,8 +27,10 @@ export const createSiteVisitRequestSchema = z.object({
     .string()
     .refine((date) => {
       const parsed = new Date(date)
-      return !isNaN(parsed.getTime()) && parsed >= new Date()
-    }, 'Requested date must be in the future'),
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return !isNaN(parsed.getTime()) && parsed > today
+    }, 'Requested date must be tomorrow or later'),
   estimated_hours: z
     .number()
     .int('Estimated hours must be a whole number')
@@ -44,21 +46,39 @@ export type CreateSiteVisitRequest = z.infer<typeof createSiteVisitRequestSchema
 export const approvalSchema = z.object({
   status: z.enum(['approved', 'rejected']),
   scheduled_date: z.string().optional(),
-  duration_hours: z.coerce.number().int().min(1).optional(),
-})
+  duration_hours: z.coerce.number().int().min(1).max(24).optional(),
+}).refine(
+  (data) => {
+    // If approving, scheduled_date and duration_hours should be provided
+    if (data.status === 'approved') {
+      return data.scheduled_date !== undefined && data.duration_hours !== undefined
+    }
+    return true
+  },
+  { message: 'Approved requests must have scheduled_date and duration_hours' }
+)
 
 /**
  * Visit recording schema - validates technician visit completion
  */
 export const visitRecordingSchema = z.object({
-  actual_start_time: z.string(),
-  actual_end_time: z.string(),
-  technician_notes: z.string().optional(),
-})
+  actual_start_time: z.string().refine(
+    (date) => !isNaN(new Date(date).getTime()),
+    'Invalid start time format'
+  ),
+  actual_end_time: z.string().refine(
+    (date) => !isNaN(new Date(date).getTime()),
+    'Invalid end time format'
+  ),
+  technician_notes: z.string().max(5000, 'Notes must not exceed 5000 characters').optional(),
+}).refine(
+  (data) => new Date(data.actual_end_time) > new Date(data.actual_start_time),
+  { message: 'End time must be after start time' }
+)
 
 /**
  * Visit confirmation schema - validates customer confirmation
  */
 export const visitConfirmationSchema = z.object({
-  customer_notes: z.string().optional(),
+  customer_notes: z.string().max(5000, 'Notes must not exceed 5000 characters').optional(),
 })

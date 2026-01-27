@@ -5,11 +5,23 @@ import logger from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
-    const { requestId, adminEmails } = await request.json()
+    const body = await request.json()
+    const { requestId, adminEmails } = body
 
     if (!requestId || !Array.isArray(adminEmails) || adminEmails.length === 0) {
       logger.warn({ requestId, adminEmailCount: adminEmails?.length }, 'Invalid notification request')
-      return NextResponse.json({ message: 'Invalid request data' }, { status: 400 })
+      return NextResponse.json(
+        { message: 'Invalid request data', errors: ['requestId and non-empty adminEmails array are required'] },
+        { status: 400 }
+      )
+    }
+
+    // Validate email format
+    const validEmails = adminEmails.filter(
+      (email: any) => typeof email === 'string' && email.includes('@')
+    )
+    if (validEmails.length !== adminEmails.length) {
+      logger.warn({ requestId, total: adminEmails.length, valid: validEmails.length }, 'Some invalid email addresses provided')
     }
 
     let supabase
@@ -32,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send to all admin emails in parallel
-    const emailPromises = adminEmails.map((email: string) =>
+    const emailPromises = validEmails.map((email: string) =>
       sendApprovalNotificationEmail({
         adminEmail: email,
         requesterName: requestData.requester_name,
@@ -53,11 +65,11 @@ export async function POST(request: NextRequest) {
     const successCount = results.filter(r => r !== null).length
 
     logger.info(
-      { requestId, totalEmails: adminEmails.length, successCount },
+      { requestId, totalEmails: validEmails.length, successCount },
       'Notification emails processed'
     )
 
-    return NextResponse.json({ success: true, successCount, totalEmails: adminEmails.length })
+    return NextResponse.json({ success: true, successCount, totalEmails: validEmails.length })
   } catch (error) {
     logger.error({ error }, 'Unexpected error in notification route')
     return NextResponse.json(
