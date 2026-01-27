@@ -1,3 +1,5 @@
+'use client'
+
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
@@ -5,6 +7,7 @@ import VisitRecorder from '@/components/VisitRecorder'
 import VisitRejector from '@/components/VisitRejector'
 import QRCode from '@/components/QRCode'
 import { getBaseUrl } from '@/lib/env'
+import { useState } from 'react'
 
 export default async function VisitsPage() {
   const supabase = await createSupabaseServerClient()
@@ -66,11 +69,7 @@ export default async function VisitsPage() {
                   <p style={{ margin: '6px 0', color: 'var(--muted)', fontSize: '14px' }}>
                     📅 {formatDateOnlyGMT7(visit.scheduled_date)} • ⏱ {visit.duration_hours}h
                   </p>
-                  <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
-                    Visit ID: <code style={{ background: 'var(--card)', padding: '2px 6px', borderRadius: '4px' }}>
-                      {visit.id}
-                    </code>
-                  </p>
+                  <CopyableText label="Visit ID" value={visit.id} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', minWidth: '220px' }}>
                   <VisitRecorder id={visit.id} />
@@ -109,11 +108,7 @@ export default async function VisitsPage() {
                   <p style={{ margin: '8px 0', color: 'var(--accent)' }}>
                     ⏳ Waiting for customer confirmation...
                   </p>
-                  <p style={{ margin: '4px 0', fontSize: '12px', color: 'var(--muted)' }}>
-                    Link: <code style={{ background: 'var(--card)', padding: '2px 6px', borderRadius: '4px' }}>
-                      {process.env.NEXT_PUBLIC_BASE_URL}/confirm-visit/{visit.id}
-                    </code>
-                  </p>
+                  <CopyableText label="Link" value={`${getBaseUrl()}/confirm-visit/${visit.id}`} />
                 </div>
                 <div style={{ textAlign: 'center', minWidth: '220px' }}>
                   <QRCode url={`${getBaseUrl()}/confirm-visit/${visit.id}`} />
@@ -124,5 +119,42 @@ export default async function VisitsPage() {
         )}
       </div>
     </main>
+  )
+}
+
+// Reusable component for copyable text
+function CopyableText({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  return (
+    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
+      {label}:{' '}
+      <code
+        onClick={handleCopy}
+        style={{
+          background: 'var(--card)',
+          padding: '4px 8px',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          userSelect: 'none',
+          transition: 'all 0.2s ease',
+          backgroundColor: copied ? 'var(--accent)' : 'var(--card)',
+          color: copied ? 'white' : 'inherit',
+        }}
+        title="Click to copy"
+      >
+        {copied ? '✓ Copied!' : value.length > 40 ? value.substring(0, 37) + '...' : value}
+      </code>
+    </p>
   )
 }

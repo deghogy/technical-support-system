@@ -62,7 +62,7 @@ export default function HistoryPage() {
             border: filter === 'approved' ? 'none' : '1px solid rgba(255,255,255,0.04)',
           }}
         >
-          Approved ({requests.filter(r => r.status === 'approved').length})
+          Approved ({requests.filter(r => r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed').length})
         </button>
         <button
           onClick={() => setFilter('scheduled')}
