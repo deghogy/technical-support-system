@@ -35,7 +35,7 @@ export const createSiteVisitRequestSchema = z.object({
     .number()
     .int('Estimated hours must be a whole number')
     .min(1, 'Estimated hours must be at least 1')
-    .max(24, 'Estimated hours must not exceed 24'),
+    .max(999, 'Estimated hours must not exceed 999'),
 })
 
 export type CreateSiteVisitRequest = z.infer<typeof createSiteVisitRequestSchema>

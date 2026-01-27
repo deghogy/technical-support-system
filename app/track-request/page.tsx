@@ -110,7 +110,7 @@ export default function TrackRequestPage() {
               </div>
             </div>
             <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '80px', textAlign: 'right' }}>
-              {quota.availableHours}/{quota.totalHours}h
+              {quota.usedHours}/{quota.totalHours}h
             </span>
           </div>
           <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
