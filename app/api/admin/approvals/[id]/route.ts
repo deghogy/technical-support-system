@@ -94,6 +94,44 @@ export async function POST(
 
     logger.info({ id, status: validatedData.status, approvedBy: user.email }, 'Request approval updated')
 
+    // If approved, deduct hours from customer quota
+    if (validatedData.status === 'approved') {
+      try {
+        const estimatedHours = validatedData.duration_hours ? Number(validatedData.duration_hours) : requestData.estimated_hours
+        
+        // Get customer quota
+        const { data: quota } = await supabase
+          .from('customer_quotas')
+          .select('*')
+          .eq('customer_email', requestData.requester_email.toLowerCase())
+          .single()
+
+        if (quota) {
+          // Deduct hours from quota
+          const newUsedHours = Math.min(quota.used_hours + estimatedHours, quota.total_hours)
+          
+          await supabase
+            .from('customer_quotas')
+            .update({ used_hours: newUsedHours })
+            .eq('customer_email', requestData.requester_email.toLowerCase())
+
+          // Log the quota deduction
+          await supabase
+            .from('quota_logs')
+            .insert({
+              customer_email: requestData.requester_email.toLowerCase(),
+              hours_deducted: estimatedHours,
+              reason: `Visit approved - ${requestData.site_location}`,
+            })
+
+          logger.info({ email: requestData.requester_email, hours: estimatedHours }, 'Quota deducted')
+        }
+      } catch (quotaError) {
+        logger.error({ error: quotaError, id }, 'Failed to deduct quota')
+        // Don't fail the approval if quota deduction fails
+      }
+    }
+
     // Send email to customer if approved and scheduled
     if (validatedData.status === 'approved' && validatedData.scheduled_date) {
       try {

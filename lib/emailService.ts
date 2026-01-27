@@ -92,7 +92,7 @@ export async function sendScheduleConfirmationEmail({
       subject: 'Boccard Visit Scheduled',
       html: `
         <h2>A Visit Has Been Scheduled</h2>
-        <p>Hi ${requesterName},</p>
+        <p>Hi Boccard Admin,</p>
         <p>A site visit request has been approved and scheduled!</p>
         <div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
           <p><strong>Location:</strong> ${siteLocation}</p>
@@ -143,7 +143,7 @@ export async function sendVisitCompletionEmail({
       subject: 'Boccard Visit Confirmed',
       html: `
         <h2>Site Visit Completed</h2>
-        <p>Hi ${requesterName},</p>
+        <p>Hi Boccard Admin,</p>
         <p>Your scheduled site visit at <strong>${siteLocation}</strong> has been completed by our technician.</p>
         <p>Please review the visit details and confirm that the work was completed to your satisfaction.</p>
         <p>

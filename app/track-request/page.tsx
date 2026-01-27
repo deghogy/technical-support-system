@@ -6,6 +6,7 @@ import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 export default function TrackRequestPage() {
   const [email, setEmail] = useState('')
   const [requests, setRequests] = useState<any[]>([])
+  const [quota, setQuota] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [searched, setSearched] = useState(false)
@@ -15,6 +16,7 @@ export default function TrackRequestPage() {
     setLoading(true)
     setError('')
     setRequests([])
+    setQuota(null)
     setSearched(true)
 
     try {
@@ -27,6 +29,13 @@ export default function TrackRequestPage() {
         }
       } else {
         setError('Failed to load requests')
+      }
+
+      // Load quota
+      const quotaRes = await fetch(`/api/customer/quota?email=${encodeURIComponent(email)}`)
+      if (quotaRes.ok) {
+        const quotaData = await quotaRes.json()
+        setQuota(quotaData)
       }
     } catch (err) {
       console.error(err)
@@ -76,6 +85,40 @@ export default function TrackRequestPage() {
       {error && searched && (
         <div className="card" style={{ borderColor: 'var(--danger)' }}>
           <p style={{ color: 'var(--danger)', margin: 0 }}>❌ {error}</p>
+        </div>
+      )}
+
+      {searched && quota && (
+        <div className="card" style={{ marginBottom: 20, background: 'var(--card)' }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--muted)' }}>
+            <b>Your Hour Quota:</b>
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                background: 'rgba(30, 144, 255, 0.1)',
+                height: '24px',
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  background: 'var(--accent)',
+                  height: '100%',
+                  width: `${quota.totalHours === 0 ? 0 : (quota.usedHours / quota.totalHours) * 100}%`,
+                  transition: 'width 0.3s ease',
+                }} />
+              </div>
+            </div>
+            <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '80px', textAlign: 'right' }}>
+              {quota.availableHours}/{quota.totalHours}h
+            </span>
+          </div>
+          <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
+            {quota.totalHours === 0 
+              ? '⚠️ No quota allocated'
+              : `${quota.usedHours}h used, ${quota.availableHours}h available`
+            }
+          </p>
         </div>
       )}
 
