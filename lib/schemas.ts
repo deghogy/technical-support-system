@@ -21,7 +21,7 @@ export const createSiteVisitRequestSchema = z.object({
   problem_desc: z
     .string()
     .trim()
-    .min(10, 'Problem description must be at least 10 characters')
+    .min(1, 'Problem description is required')
     .max(2000, 'Problem description must not exceed 2000 characters'),
   requested_date: z
     .string()

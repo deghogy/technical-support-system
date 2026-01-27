@@ -115,7 +115,7 @@ export async function POST(
 
     logger.info({ id, visitStatus: 'visit-completed' }, 'Visit recording saved')
 
-    // Send completion email to customer
+    // Send completion email to customer only if already approved by admin
     try {
       const { data: requestData } = await supabase
         .from('site_visit_requests')
@@ -123,7 +123,7 @@ export async function POST(
         .eq('id', id)
         .single()
 
-      if (requestData) {
+      if (requestData && requestData.status === 'approved') {
         const confirmationLink = `${getBaseUrl()}/confirm-visit/${id}`
         await sendVisitCompletionEmail({
           customerEmail: requestData.requester_email,

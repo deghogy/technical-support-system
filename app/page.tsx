@@ -28,7 +28,7 @@ export default function Home() {
           site_location: formData.get('location'),
           problem_desc: formData.get('problem'),
           requested_date: formData.get('date'),
-          estimated_hours: formData.get('estimated_hours'),
+          estimated_hours: Number(formData.get('estimated_hours')),
         }),
       })
 
