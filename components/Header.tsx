@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import UserMenu from '@/components/UserMenu'
 
@@ -33,20 +34,16 @@ export default async function Header() {
         height: '64px',
       }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            background: 'var(--accent)',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 700,
-            color: '#fff',
-            fontSize: '18px',
-          }}>
-            B
-          </div>
+          <Image
+            src="/assets/logo-boccard.png"
+            alt="Boccard-ID Logo"
+            width={32}
+            height={32}
+            priority
+            style={{
+              borderRadius: '8px',
+            }}
+          />
           <span style={{
             fontSize: '16px',
             fontWeight: 700,
