@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -27,7 +27,6 @@ export default function Home() {
       const res = await fetch(`/api/customer/quota?email=${encodeURIComponent(email)}`)
       if (res.ok) {
         const data = await res.json()
-        // If quota is 0 or not found, show error
         if (!data || data.totalHours === 0) {
           setQuotaError('Email not registered in quota system. Please contact support.')
           setQuota(null)
@@ -59,7 +58,6 @@ export default function Home() {
     const formData = new FormData(form)
     const estimatedHours = Number(formData.get('estimated_hours'))
 
-    // Check quota before submission
     if (quota && quota.availableHours < estimatedHours) {
       setMessage(`Insufficient quota. You have ${quota.availableHours} hours available but need ${estimatedHours} hours.`)
       setLoading(false)
@@ -83,7 +81,7 @@ export default function Home() {
       })
 
       if (res.ok) {
-        setMessage('✅ Request submitted successfully!')
+        setMessage('Request submitted successfully!')
         form.reset()
         setQuota(null)
         setQuotaChecked(false)
@@ -101,30 +99,45 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <main style={{ maxWidth: 900, margin: '60px auto', padding: '0 20px' }}>
-        <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
-            <h2>Submit Site Visit Request</h2>
-            <p style={{ color: 'var(--muted)' }}>
-              Fill out the form below to request a technical support visit at your site.
+    <main className="container-sm" style={{ paddingTop: '40px', paddingBottom: '60px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '48px', alignItems: 'flex-start' }}>
+        {/* Left Column - Form */}
+        <div>
+          <div style={{ marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>
+              Site Visit Request
+            </h1>
+            <p style={{ fontSize: '15px', color: '#64748B', margin: 0 }}>
+              Submit a technical support request for your site. Check your quota first to proceed.
             </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="card request-form">
-              <div style={{ background: 'var(--card)', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '13px', color: 'var(--muted)' }}>
-                📋 Please check your quota first to proceed with the request
-              </div>
+          <form onSubmit={handleSubmit} className="card" style={{ padding: '24px' }}>
+            <div style={{ background: '#EAF3FB', padding: '12px 16px', borderRadius: '6px', marginBottom: '20px', borderLeft: '3px solid #0077C8' }}>
+              <p style={{ margin: 0, fontSize: '13px', color: '#475569' }}>
+                Please check your quota before submitting a request
+              </p>
+            </div>
 
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                Your Name
+              </label>
               <input
                 name="name"
-                placeholder="Your name"
+                placeholder="Enter your full name"
                 required
               />
+            </div>
 
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                Email Address
+              </label>
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <input
                   type="email"
-                  placeholder="Your email"
+                  placeholder="your.email@company.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value)
@@ -140,142 +153,219 @@ export default function Home() {
                   onClick={checkQuota}
                   disabled={checkingQuota || !email}
                   style={{
-                    background: quotaChecked ? 'var(--accent)' : 'transparent',
-                    border: `1px solid ${quotaChecked ? 'var(--accent)' : 'rgba(255,255,255,0.2)'}`,
-                    color: quotaChecked ? '#fff' : 'var(--muted)',
+                    background: quotaChecked ? '#22C55E' : '#EAF3FB',
+                    color: quotaChecked ? '#FFFFFF' : '#0077C8',
                     padding: '10px 16px',
-                    borderRadius: '4px',
-                    cursor: email ? 'pointer' : 'not-allowed',
+                    borderRadius: '6px',
                     fontSize: '13px',
-                    fontWeight: quotaChecked ? 600 : 400,
+                    fontWeight: 500,
+                    cursor: email ? 'pointer' : 'not-allowed',
                     whiteSpace: 'nowrap',
-                    transition: 'all 0.2s ease',
+                    border: quotaChecked ? 'none' : '1px solid #0077C8',
                   }}
                 >
-                  {checkingQuota ? '⏳ Checking...' : quotaChecked ? '✅ Verified' : '🔍 Check Quota'}
+                  {checkingQuota ? 'Checking...' : quotaChecked ? 'Verified' : 'Check Quota'}
                 </button>
               </div>
+            </div>
 
-              {quotaError && (
-                <p style={{ color: 'var(--danger)', fontSize: '14px', margin: '8px 0', background: 'rgba(255,0,0,0.1)', padding: '8px', borderRadius: '4px' }}>
-                  ❌ {quotaError}
+            {quotaError && (
+              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '12px', borderRadius: '6px', marginBottom: '16px' }}>
+                <p style={{ color: '#991B1B', fontSize: '13px', margin: 0 }}>
+                  {quotaError}
                 </p>
-              )}
+              </div>
+            )}
 
-              {quota && quota.totalHours > 0 && (
-                <div style={{ padding: '12px', background: 'var(--card)', borderRadius: '4px', fontSize: '14px', border: '1px solid var(--accent)' }}>
-                  <p style={{ margin: '0 0 6px 0' }}>
-                    <b>✅ Your Hour Quota:</b> {quota.availableHours}/{quota.totalHours} hours available
+            {quota && quota.totalHours > 0 && (
+              <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', padding: '14px', borderRadius: '6px', marginBottom: '20px' }}>
+                <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#0F172A' }}>
+                  <strong>Quota Available:</strong> {quota.availableHours} of {quota.totalHours} hours
+                </p>
+                {quota.availableHours < 10 && (
+                  <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#92400E' }}>
+                    Running low on hours. Request only what you need.
                   </p>
-                  {quota.availableHours < 10 && (
-                    <p style={{ margin: 0, color: 'var(--danger)' }}>
-                      ⚠️ Running low on hours. Request only what you need.
-                    </p>
-                  )}
+                )}
+                <div style={{ width: '100%', height: '6px', background: '#DCFCE7', borderRadius: '3px', marginTop: '10px' }}>
+                  <div style={{
+                    width: `${(quota.availableHours / quota.totalHours) * 100}%`,
+                    height: '100%',
+                    background: '#22C55E',
+                    borderRadius: '3px',
+                  }} />
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Show rest of form only after quota is verified */}
-              {quotaChecked && quota && quota.totalHours > 0 && (
-                <>
+            {quotaChecked && quota && quota.totalHours > 0 && (
+              <>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                    Site Location
+                  </label>
                   <input
                     name="location"
-                    placeholder="Site location"
+                    placeholder="Enter site location"
                     required
                   />
+                </div>
 
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                    Problem Description
+                  </label>
                   <textarea
                     name="problem"
-                    placeholder="Problem description"
+                    placeholder="Describe the technical issue you need assistance with"
+                    rows={4}
                     required
                   />
+                </div>
 
-                  <input
-                    type="date"
-                    name="date"
-                    required
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                      Preferred Date
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                      Estimated Hours
+                    </label>
+                    <input
+                      type="number"
+                      name="estimated_hours"
+                      placeholder="e.g. 4"
+                      min="1"
+                      max="999"
+                      required
+                    />
+                  </div>
+                </div>
 
-                  <input
-                    type="number"
-                    name="estimated_hours"
-                    placeholder="Estimated hours needed"
-                    min="1"
-                    max="999"
-                    required
-                  />
-
-                  <button type="submit" disabled={loading}>
-                    {loading ? '⏳ Submitting...' : '✉️ Submit Request'}
-                  </button>
-                </>
-              )}
-
-              {quotaChecked && quotaError && (
-                <button 
-                  type="button"
-                  disabled
-                  style={{
-                    background: 'var(--card)',
-                    color: 'var(--muted)',
-                    cursor: 'not-allowed',
-                    opacity: 0.5,
-                  }}
-                >
-                  Cannot proceed - contact support
+                <button type="submit" disabled={loading} style={{ width: '100%' }}>
+                  {loading ? 'Submitting...' : 'Submit Request'}
                 </button>
-              )}
-            </form>
+              </>
+            )}
 
-            {message && (
-              <p style={{ 
-                padding: '12px', 
-                borderRadius: '4px', 
-                background: message.includes('✅') ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,0,0.1)',
-                color: message.includes('✅') ? 'var(--accent)' : 'var(--danger)',
-                marginTop: '16px'
+            {quotaChecked && quotaError && (
+              <button
+                type="button"
+                disabled
+                style={{
+                  width: '100%',
+                  background: '#F1F5F9',
+                  color: '#94A3B8',
+                  cursor: 'not-allowed',
+                  opacity: 0.8,
+                }}
+              >
+                Cannot proceed - contact support
+              </button>
+            )}
+          </form>
+
+          {message && (
+            <div style={{
+              marginTop: '16px',
+              padding: '14px',
+              borderRadius: '6px',
+              background: message.includes('successfully') ? '#F0FDF4' : '#FEF2F2',
+              border: `1px solid ${message.includes('successfully') ? '#86EFAC' : '#FECACA'}`,
+            }}>
+              <p style={{
+                margin: 0,
+                fontSize: '14px',
+                color: message.includes('successfully') ? '#166534' : '#991B1B',
               }}>
                 {message}
               </p>
-            )}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Info */}
+        <div>
+          <div className="card" style={{ marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px 0' }}>
+              Track Your Request
+            </h3>
+            <p style={{ margin: '0 0 16px 0', color: '#64748B', fontSize: '14px' }}>
+              Already submitted a request? Check its status and view updates.
+            </p>
+            <Link
+              href="/track-request"
+              style={{
+                display: 'inline-block',
+                background: '#0077C8',
+                color: '#FFFFFF',
+                padding: '10px 16px',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontWeight: 500,
+                fontSize: '14px',
+              }}
+            >
+              Track Request
+            </Link>
           </div>
 
-          <div style={{ flex: 1 }}>
-            <div className="card">
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Track Your Request</h3>
-              <p style={{ margin: '0 0 16px 0', color: 'var(--muted)', fontSize: '14px' }}>
-                Already submitted a request? Track its status here.
-              </p>
-              <Link
-                href="/track-request"
-                style={{
-                  display: 'inline-block',
-                  background: 'var(--accent)',
-                  color: '#fff',
-                  padding: '10px 16px',
-                  borderRadius: '6px',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                }}
-              >
-                Track Request Status
-              </Link>
-            </div>
-
-            <div className="card">
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>How It Works</h3>
-              <ol style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '14px' }}>
-                <li style={{ margin: '8px 0' }}>✅ Check your available quota</li>
-                <li style={{ margin: '8px 0' }}>📝 Submit your site visit request</li>
-                <li style={{ margin: '8px 0' }}>📋 Our team reviews and approves</li>
-                <li style={{ margin: '8px 0' }}>📅 We schedule the visit</li>
-                <li style={{ margin: '8px 0' }}>🔧 Technician completes the work</li>
-                <li style={{ margin: '8px 0' }}>✔️ You confirm completion</li>
-              </ol>
-            </div>
+          <div className="card">
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0F172A', margin: '0 0 16px 0' }}>
+              How It Works
+            </h3>
+            <ol style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+              {[
+                'Check your available quota',
+                'Submit site visit request',
+                'Our team reviews and approves',
+                'Visit is scheduled',
+                'Technician completes work',
+                'You confirm completion',
+              ].map((step, index) => (
+                <li
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '10px 0',
+                    borderBottom: index < 5 ? '1px solid #EAF3FB' : 'none',
+                    fontSize: '14px',
+                    color: '#475569',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      background: '#EAF3FB',
+                      color: '#0077C8',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {index + 1}
+                  </span>
+                  {step}
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   )
 }

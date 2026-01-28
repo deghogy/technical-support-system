@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import { redirect } from 'next/navigation'
-import { CopyableText } from '@/components/CopyableText'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient()
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   ])
 
   // Get scheduled visits that haven't been recorded yet
-  const { data: scheduledVisits, error: scheduledError } = await supabase
+  const { data: scheduledVisits } = await supabase
     .from('site_visit_requests')
     .select('*')
     .eq('status', 'approved')
@@ -55,98 +55,217 @@ export default async function DashboardPage() {
     .map(([location, hours]) => ({ location, hours }))
     .sort((a, b) => b.hours - a.hours)
 
+  const totalHours = conductedByLocationArray.reduce((sum, item) => sum + item.hours, 0)
+
   return (
-    <main style={{ maxWidth: 1000, margin: '40px auto' }}>
-      <h1>Admin Dashboard</h1>
-
-      <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
-        <div className="card" style={{ flex: 1, minWidth: '150px' }}>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--muted)' }}>Pending</h3>
-          <p style={{ fontSize: 32, margin: 0, fontWeight: 700 }}>{pending ?? 0}</p>
-        </div>
-
-        <div className="card" style={{ flex: 1, minWidth: '150px' }}>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--muted)' }}>Approved</h3>
-          <p style={{ fontSize: 32, margin: 0, fontWeight: 700 }}>{approved ?? 0}</p>
-        </div>
-
-        <div className="card" style={{ flex: 1, minWidth: '150px' }}>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--muted)' }}>Confirmed</h3>
-          <p style={{ fontSize: 32, margin: 0, fontWeight: 700 }}>{confirmed ?? 0}</p>
-        </div>
-
-        <div className="card" style={{ flex: 1, minWidth: '150px' }}>
-          <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--muted)' }}>Rejected</h3>
-          <p style={{ fontSize: 32, margin: 0, fontWeight: 700 }}>{rejected ?? 0}</p>
-        </div>
+    <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px' }}>
+      {/* Page Header */}
+      <div style={{ marginBottom: '28px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>
+          Engineering Dashboard
+        </h1>
+        <p style={{ fontSize: '15px', color: '#64748B', margin: 0 }}>
+          Technical support operations overview and scheduled visits
+        </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 20, marginTop: 30 }}>
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: '18px', margin: '0 0 16px 0' }}>Upcoming Scheduled Visits</h2>
-          {!scheduledVisits || scheduledVisits.length === 0 ? (
-            <p style={{ color: 'var(--muted)' }}>No scheduled visits</p>
-          ) : (
-            scheduledVisits.map((visit) => (
-              <div key={visit.id} className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20, alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0 }}>
-                      <b>{visit.requester_name}</b> <small style={{ color: 'var(--muted)' }}>({visit.requester_email})</small>
-                    </p>
-                    <p style={{ margin: '6px 0' }}>📍 {visit.site_location}</p>
-                    <p style={{ margin: '6px 0', fontSize: '14px' }}>{visit.problem_desc}</p>
-                    <p style={{ margin: '6px 0', color: 'var(--muted)', fontSize: '14px' }}>
-                      📅 {formatDateOnlyGMT7(visit.scheduled_date)} • ⏱ {visit.duration_hours}h
-                    </p>
-                    <CopyableText label="Visit ID" value={visit.id} />
-                  </div>
-                </div>
-              </div>
-            ))
+      {/* Stats Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+        <div className="card" style={{ padding: '20px' }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+            Pending Requests
+          </p>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: pending && pending > 0 ? '#0077C8' : '#0F172A', margin: 0 }}>
+            {pending ?? 0}
+          </p>
+          {pending && pending > 0 && (
+            <Link
+              href="/admin/approvals"
+              style={{ fontSize: '13px', color: '#0077C8', textDecoration: 'none', marginTop: '8px', display: 'inline-block' }}
+            >
+              Review →
+            </Link>
           )}
         </div>
 
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: '18px', margin: '0 0 16px 0' }}>Conducted Hours by Location</h2>
-          {conductedByLocationArray.length === 0 ? (
-            <p style={{ color: 'var(--muted)' }}>No conducted visits yet</p>
+        <div className="card" style={{ padding: '20px' }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+            Approved
+          </p>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+            {approved ?? 0}
+          </p>
+          <p style={{ fontSize: '13px', color: '#64748B', margin: '8px 0 0 0' }}>
+            Scheduled &amp; active
+          </p>
+        </div>
+
+        <div className="card" style={{ padding: '20px' }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+            Completed
+          </p>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: '#22C55E', margin: 0 }}>
+            {confirmed ?? 0}
+          </p>
+          <p style={{ fontSize: '13px', color: '#64748B', margin: '8px 0 0 0' }}>
+            Customer confirmed
+          </p>
+        </div>
+
+        <div className="card" style={{ padding: '20px' }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+            Rejected
+          </p>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+            {rejected ?? 0}
+          </p>
+          <p style={{ fontSize: '13px', color: '#64748B', margin: '8px 0 0 0' }}>
+            Declined requests
+          </p>
+        </div>
+      </div>
+
+      {/* Two Column Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+        {/* Left Column - Scheduled Visits */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+              Upcoming Scheduled Visits
+            </h2>
+            {scheduledVisits && scheduledVisits.length > 0 && (
+              <span style={{ fontSize: '13px', color: '#64748B' }}>
+                {scheduledVisits.length} visit{scheduledVisits.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+
+          {!scheduledVisits || scheduledVisits.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
+                No scheduled visits at this time
+              </p>
+              <Link
+                href="/admin/approvals"
+                style={{ fontSize: '14px', color: '#0077C8', textDecoration: 'none', marginTop: '12px', display: 'inline-block' }}
+              >
+                Review pending requests →
+              </Link>
+            </div>
           ) : (
-            (() => {
-              const maxHours = Math.max(...conductedByLocationArray.map(x => x.hours), 20)
-              return conductedByLocationArray.map((item) => (
-                <div key={item.location} className="card" style={{ marginBottom: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <p style={{ margin: 0, color: 'var(--muted)', fontSize: '14px' }}>📍 {item.location}</p>
-                    <p style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--accent)' }}>{item.hours}h</p>
-                  </div>
-                  <div style={{
-                    width: '100%',
-                    height: '24px',
-                    background: 'rgba(30, 144, 255, 0.1)',
-                    borderRadius: '6px',
-                    overflow: 'hidden',
-                    border: '1px solid rgba(30, 144, 255, 0.2)',
-                  }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${(item.hours / maxHours) * 100}%`,
-                      background: 'linear-gradient(90deg, var(--accent), rgba(30, 144, 255, 0.6))',
-                      transition: 'width 0.3s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'flex-end',
-                      paddingRight: '8px',
-                      minWidth: item.hours > 0 ? '30px' : '0',
-                    }}>
-                      {item.hours > 2 && (
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#fff' }}>{item.hours}h</span>
-                      )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {scheduledVisits.map((visit) => (
+                <div key={visit.id} className="card" style={{ padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+                          {visit.requester_name}
+                        </h3>
+                        <span style={{ fontSize: '12px', color: '#64748B' }}>
+                          ({visit.requester_email})
+                        </span>
+                      </div>
+
+                      <p style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#475569' }}>
+                        <span style={{ color: '#64748B' }}>Location:</span> {visit.site_location}
+                      </p>
+
+                      <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#64748B', lineHeight: 1.5 }}>
+                        {visit.problem_desc}
+                      </p>
+
+                      <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#475569' }}>
+                        <span>
+                          <span style={{ color: '#64748B' }}>Scheduled:</span>{' '}
+                          <strong>{formatDateOnlyGMT7(visit.scheduled_date)}</strong>
+                        </span>
+                        <span>
+                          <span style={{ color: '#64748B' }}>Duration:</span>{' '}
+                          <strong>{visit.duration_hours}h</strong>
+                        </span>
+                      </div>
                     </div>
+
+                    <Link
+                      href={`/admin/visits?id=${visit.id}`}
+                      style={{
+                        background: '#EAF3FB',
+                        color: '#0077C8',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        textDecoration: 'none',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Record Visit
+                    </Link>
                   </div>
                 </div>
-              ))
-            })()
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Hours by Location */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+              Hours by Location
+            </h2>
+            {totalHours > 0 && (
+              <span style={{ fontSize: '13px', color: '#64748B' }}>
+                Total: {totalHours}h
+              </span>
+            )}
+          </div>
+
+          {conductedByLocationArray.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
+                No conducted visits yet
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {(() => {
+                const maxHours = Math.max(...conductedByLocationArray.map(x => x.hours), 20)
+                return conductedByLocationArray.map((item) => (
+                  <div key={item.location} className="card" style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 500, color: '#0F172A' }}>
+                        {item.location}
+                      </span>
+                      <span style={{ fontSize: '16px', fontWeight: 700, color: '#0077C8' }}>
+                        {item.hours}h
+                      </span>
+                    </div>
+
+                    <div style={{
+                      width: '100%',
+                      height: '8px',
+                      background: '#EAF3FB',
+                      borderRadius: '4px',
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${(item.hours / maxHours) * 100}%`,
+                        background: '#0077C8',
+                        borderRadius: '4px',
+                        transition: 'width 0.3s ease',
+                      }} />
+                    </div>
+
+                    <p style={{ fontSize: '12px', color: '#64748B', margin: '6px 0 0 0' }}>
+                      {Math.round((item.hours / totalHours) * 100)}% of total hours
+                    </p>
+                  </div>
+                ))
+              })()}
+            </div>
           )}
         </div>
       </div>
