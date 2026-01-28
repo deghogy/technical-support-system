@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 
+type SortOption = 'newest' | 'oldest' | 'location' | 'status'
+
 export default function TrackRequestPage() {
   const [email, setEmail] = useState('')
   const [requests, setRequests] = useState<any[]>([])
@@ -10,6 +12,8 @@ export default function TrackRequestPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [searched, setSearched] = useState(false)
+  const [sortBy, setSortBy] = useState<SortOption>('newest')
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -47,8 +51,8 @@ export default function TrackRequestPage() {
 
   const getStatusColor = (status: string, visitStatus: string) => {
     if (visitStatus === 'confirmed') return 'var(--accent)'
-    if (status === 'rejected') return 'var(--danger)'
-    if (status === 'approved') return 'var(--accent)'
+    if (status === 'rejected') return '#ef4444'
+    if (status === 'approved') return '#8b5cf6'
     return 'var(--muted)'
   }
 
@@ -59,6 +63,29 @@ export default function TrackRequestPage() {
     if (status === 'approved') return '✓ Approved'
     return '⏳ Pending Review'
   }
+
+  // Sort requests
+  const sortedRequests = [...requests].sort((a, b) => {
+    if (sortBy === 'newest') {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    } else if (sortBy === 'oldest') {
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    } else if (sortBy === 'location') {
+      return (a.site_location || '').localeCompare(b.site_location || '')
+    } else if (sortBy === 'status') {
+      const statusOrder = { rejected: 0, pending: 1, approved: 2, scheduled: 3, confirmed: 4 }
+      const getStatusKey = (r: any) => {
+        if (r.status === 'rejected') return 'rejected'
+        if (r.visit_status === 'confirmed') return 'confirmed'
+        if (r.scheduled_date && r.status === 'approved') return 'scheduled'
+        if (r.status === 'approved') return 'approved'
+        return 'pending'
+      }
+      return (statusOrder[getStatusKey(a) as keyof typeof statusOrder] || 0) -
+             (statusOrder[getStatusKey(b) as keyof typeof statusOrder] || 0)
+    }
+    return 0
+  })
 
   return (
     <main style={{ maxWidth: 700, margin: '60px auto', padding: '0 20px' }}>
@@ -122,6 +149,69 @@ export default function TrackRequestPage() {
         </div>
       )}
 
+      {/* Sort Options */}
+      {requests.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+          <label style={{ color: 'var(--muted)', fontSize: '14px', fontWeight: 500 }}>Sort by:</label>
+          <button
+            onClick={() => setSortBy('newest')}
+            style={{
+              background: sortBy === 'newest' ? 'var(--accent)' : 'transparent',
+              color: sortBy === 'newest' ? '#fff' : 'var(--muted)',
+              border: sortBy === 'newest' ? 'none' : '1px solid rgba(255,255,255,0.04)',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '13px',
+            }}
+          >
+            Newest
+          </button>
+          <button
+            onClick={() => setSortBy('oldest')}
+            style={{
+              background: sortBy === 'oldest' ? 'var(--accent)' : 'transparent',
+              color: sortBy === 'oldest' ? '#fff' : 'var(--muted)',
+              border: sortBy === 'oldest' ? 'none' : '1px solid rgba(255,255,255,0.04)',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '13px',
+            }}
+          >
+            Oldest
+          </button>
+          <button
+            onClick={() => setSortBy('location')}
+            style={{
+              background: sortBy === 'location' ? 'var(--accent)' : 'transparent',
+              color: sortBy === 'location' ? '#fff' : 'var(--muted)',
+              border: sortBy === 'location' ? 'none' : '1px solid rgba(255,255,255,0.04)',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '13px',
+            }}
+          >
+            Location
+          </button>
+          <button
+            onClick={() => setSortBy('status')}
+            style={{
+              background: sortBy === 'status' ? 'var(--accent)' : 'transparent',
+              color: sortBy === 'status' ? '#fff' : 'var(--muted)',
+              border: sortBy === 'status' ? 'none' : '1px solid rgba(255,255,255,0.04)',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '13px',
+            }}
+          >
+            Status
+          </button>
+        </div>
+      )}
+
       {searched && requests.length === 0 && !error && (
         <div className="card" style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--muted)', margin: 0 }}>No requests found for this email address</p>
@@ -130,112 +220,185 @@ export default function TrackRequestPage() {
 
       {requests.length > 0 && (
         <div style={{ marginTop: 20 }}>
-          {requests.map((req) => (
-            <div key={req.id} className="card">
-              <div style={{ marginBottom: 12 }}>
-                <p style={{ margin: 0 }}>
-                  <b>📍 {req.site_location}</b>
-                </p>
-                <p style={{ margin: '4px 0 0 0', color: 'var(--muted)', fontSize: '14px' }}>
-                  {req.problem_desc}
-                </p>
-              </div>
+          {sortedRequests.map((req) => {
+            const isExpanded = expandedId === req.id
+            const statusColor = getStatusColor(req.status, req.visit_status)
+            const statusLabel = getStatusLabel(req.status, req.visit_status)
 
-              <div style={{
-                padding: '12px',
-                background: 'var(--card)',
-                borderRadius: '6px',
-                marginBottom: 12,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px', color: 'var(--muted)' }}>Status</span>
-                  <span style={{
-                    color: getStatusColor(req.status, req.visit_status),
-                    fontWeight: 600,
-                    fontSize: '14px',
-                  }}>
-                    {getStatusLabel(req.status, req.visit_status)}
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ fontSize: '14px', color: 'var(--muted)' }}>
-                <p style={{ margin: '4px 0' }}>
-                  <b>Requested:</b> {formatDateOnlyGMT7(req.requested_date)}
-                </p>
-                <p style={{ margin: '4px 0' }}>
-                  <b>Estimated hours:</b> {req.estimated_hours}h
-                </p>
-
-                {req.approved_at && (
-                  <p style={{ margin: '4px 0' }}>
-                    <b>Approved:</b> {formatDateGMT7(req.approved_at)}
-                  </p>
-                )}
-
-                {req.scheduled_date && (
-                  <p style={{ margin: '4px 0' }}>
-                    <b>Scheduled:</b> {formatDateOnlyGMT7(req.scheduled_date)} ({req.duration_hours}h)
-                  </p>
-                )}
-
-                {req.actual_start_time && req.actual_end_time && (
-                  <>
-                    <p style={{ margin: '4px 0' }}>
-                      <b>Visit completed:</b>
+            return (
+              <div
+                key={req.id}
+                className="card"
+                style={{
+                  cursor: 'pointer',
+                  marginBottom: 16,
+                  transition: 'all 0.2s ease',
+                  borderLeft: `4px solid ${statusColor}`,
+                }}
+                onClick={() => setExpandedId(isExpanded ? null : req.id)}
+              >
+                {/* Header Section - Always Visible */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: isExpanded ? 12 : 0 }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, marginBottom: 4 }}>
+                      <b>📍 {req.site_location}</b>
                     </p>
-                    <p style={{ margin: '4px 0 0 0', paddingLeft: '12px' }}>
-                      🕐 Started: {formatDateGMT7(req.actual_start_time)}
+                    <p style={{ margin: 0, color: 'var(--muted)', fontSize: '13px', lineHeight: 1.4 }}>
+                      {req.problem_desc}
                     </p>
-                    <p style={{ margin: '4px 0 0 0', paddingLeft: '12px' }}>
-                      🕑 Ended: {formatDateGMT7(req.actual_end_time)}
-                    </p>
-                  </>
-                )}
-
-                {req.technician_notes && (
-                  <div style={{ margin: '8px 0', padding: '8px', background: 'rgba(30, 144, 255, 0.05)', borderRadius: '4px' }}>
-                    <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontWeight: 600, fontSize: '13px' }}>
-                      📝 Technician Notes
-                    </p>
-                    <p style={{ margin: 0, fontSize: '13px' }}>{req.technician_notes}</p>
                   </div>
-                )}
-
-                {req.visit_status === 'visit-completed' && !req.customer_confirmed_at && (
-                  <div style={{ margin: '12px 0 0 0', padding: '12px', background: 'rgba(30, 144, 255, 0.1)', borderRadius: '6px', border: '1px solid rgba(30, 144, 255, 0.2)' }}>
-                    <p style={{ margin: '0 0 8px 0', color: 'var(--accent)', fontWeight: 600, fontSize: '14px' }}>
-                      ⏳ Awaiting Your Confirmation
-                    </p>
-                    <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--muted)' }}>
-                      The technician has completed the visit. Please confirm that the work was done to your satisfaction.
-                    </p>
-                    <a
-                      href={`/confirm-visit/${req.id}`}
+                  <div style={{ textAlign: 'right', marginLeft: 16 }}>
+                    <span
                       style={{
                         display: 'inline-block',
-                        background: 'var(--accent)',
-                        color: '#fff',
-                        padding: '8px 16px',
-                        borderRadius: '6px',
-                        textDecoration: 'none',
+                        padding: '4px 12px',
+                        backgroundColor: `${statusColor}20`,
+                        color: statusColor,
+                        borderRadius: '4px',
+                        fontSize: '12px',
                         fontWeight: 600,
-                        fontSize: '14px',
                       }}
                     >
-                      Confirm Visit Completion
-                    </a>
+                      {statusLabel}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expanded Details */}
+                {isExpanded && (
+                  <div style={{
+                    marginTop: 16,
+                    paddingTop: 12,
+                    borderTop: '1px solid rgba(255,255,255,0.04)',
+                  }}>
+                    {/* Request ID & Dates */}
+                    <div style={{ marginBottom: 12 }}>
+                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Request ID</p>
+                      <code style={{
+                        background: 'var(--card)',
+                        padding: '6px 10px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        color: 'var(--text)',
+                      }}>
+                        {req.id}
+                      </code>
+                      <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
+                        Requested: {formatDateOnlyGMT7(req.requested_date)}
+                      </p>
+                    </div>
+
+                    {/* Estimated Hours */}
+                    {req.estimated_hours && (
+                      <div style={{ marginBottom: 12 }}>
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Estimated Duration</p>
+                        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text)' }}>
+                          {req.estimated_hours} hour{req.estimated_hours !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Timeline Section */}
+                    <div style={{
+                      backgroundColor: 'var(--card)',
+                      padding: 12,
+                      borderRadius: '4px',
+                      marginBottom: 12,
+                    }}>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: 'var(--muted)' }}>Timeline</p>
+
+                      {req.approved_at && (
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
+                          ✓ Approved: {formatDateGMT7(req.approved_at)}
+                        </p>
+                      )}
+
+                      {req.scheduled_date && (
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
+                          📅 Scheduled: {formatDateOnlyGMT7(req.scheduled_date)} ({req.duration_hours}h)
+                        </p>
+                      )}
+
+                      {req.actual_start_time && (
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
+                          🕐 Started: {formatDateGMT7(req.actual_start_time)}
+                        </p>
+                      )}
+
+                      {req.actual_end_time && (
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
+                          🕑 Ended: {formatDateGMT7(req.actual_end_time)}
+                        </p>
+                      )}
+
+                      {req.customer_confirmed_at && (
+                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--accent)' }}>
+                          ✓ Confirmed: {formatDateGMT7(req.customer_confirmed_at)}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Technician Notes */}
+                    {req.technician_notes && (
+                      <div style={{ marginBottom: 12, padding: '12px', background: 'rgba(30, 144, 255, 0.05)', borderRadius: '4px', borderLeft: '3px solid var(--accent)' }}>
+                        <p style={{ margin: '0 0 6px 0', color: 'var(--accent)', fontWeight: 600, fontSize: '12px' }}>
+                          📝 Technician Notes
+                        </p>
+                        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text)', lineHeight: 1.4 }}>
+                          {req.technician_notes}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Confirmation CTA */}
+                    {req.visit_status === 'visit-completed' && !req.customer_confirmed_at && (
+                      <div style={{
+                        marginBottom: 12,
+                        padding: '12px',
+                        background: 'rgba(30, 144, 255, 0.1)',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(30, 144, 255, 0.2)',
+                      }}>
+                        <p style={{ margin: '0 0 8px 0', color: 'var(--accent)', fontWeight: 600, fontSize: '12px' }}>
+                          ⏳ Awaiting Your Confirmation
+                        </p>
+                        <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'var(--muted)' }}>
+                          The technician has completed the visit. Please confirm that the work was done to your satisfaction.
+                        </p>
+                        <a
+                          href={`/confirm-visit/${req.id}`}
+                          style={{
+                            display: 'inline-block',
+                            background: 'var(--accent)',
+                            color: '#fff',
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            textDecoration: 'none',
+                            fontWeight: 600,
+                            fontSize: '12px',
+                          }}
+                        >
+                          Confirm Visit Completion
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Expand Indicator */}
+                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
+                      ▲ Click to collapse
+                    </p>
                   </div>
                 )}
 
-                {req.customer_confirmed_at && (
-                  <p style={{ margin: '8px 0 0 0', color: 'var(--accent)', fontWeight: 600 }}>
-                    ✅ Confirmed on {formatDateGMT7(req.customer_confirmed_at)}
+                {/* Collapse Indicator */}
+                {!isExpanded && (
+                  <p style={{ margin: '0', fontSize: '12px', color: 'var(--muted)', marginTop: 8, textAlign: 'center' }}>
+                    ▼ Click to expand details
                   </p>
                 )}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </main>
