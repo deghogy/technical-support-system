@@ -44,7 +44,7 @@ export default async function Header() {
           }}
         >
           <Image
-            src="/LOGO-BOCCARD.png"
+            src="/assets/logo-boccard.png"
             alt="Boccard Logo"
             width={36}
             height={36}
