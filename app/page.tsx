@@ -101,17 +101,17 @@ export default function Home() {
   }
 
   return (
-    <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
-      <main style={{ maxWidth: 1600, margin: '0 auto', padding: '60px 40px' }}>
-        <div style={{ display: 'flex', gap: 60, alignItems: 'flex-start' }}>
+    <div>
+      <main style={{ maxWidth: 900, margin: '60px auto', padding: '0 20px' }}>
+        <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
-            <h2 style={{ color: '#0F172A', marginTop: 0 }}>Submit Site Visit Request</h2>
-            <p style={{ color: '#475569', fontSize: '15px' }}>
+            <h2>Submit Site Visit Request</h2>
+            <p style={{ color: 'var(--muted)' }}>
               Fill out the form below to request a technical support visit at your site.
             </p>
 
             <form onSubmit={handleSubmit} className="card request-form">
-              <div style={{ background: '#EAF3FB', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', color: '#0077C8', border: '1px solid #D0D7E2' }}>
+              <div style={{ background: 'var(--card)', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '13px', color: 'var(--muted)' }}>
                 📋 Please check your quota first to proceed with the request
               </div>
 
@@ -140,14 +140,14 @@ export default function Home() {
                   onClick={checkQuota}
                   disabled={checkingQuota || !email}
                   style={{
-                    background: quotaChecked ? '#0077C8' : '#EAF3FB',
-                    border: `1px solid ${quotaChecked ? '#0077C8' : '#D0D7E2'}`,
-                    color: quotaChecked ? '#fff' : '#0077C8',
+                    background: quotaChecked ? 'var(--accent)' : 'transparent',
+                    border: `1px solid ${quotaChecked ? 'var(--accent)' : 'rgba(255,255,255,0.2)'}`,
+                    color: quotaChecked ? '#fff' : 'var(--muted)',
                     padding: '10px 16px',
-                    borderRadius: '8px',
+                    borderRadius: '4px',
                     cursor: email ? 'pointer' : 'not-allowed',
                     fontSize: '13px',
-                    fontWeight: quotaChecked ? 600 : 500,
+                    fontWeight: quotaChecked ? 600 : 400,
                     whiteSpace: 'nowrap',
                     transition: 'all 0.2s ease',
                   }}
@@ -157,18 +157,18 @@ export default function Home() {
               </div>
 
               {quotaError && (
-                <p style={{ color: '#EF4444', fontSize: '14px', margin: '8px 0', background: '#FEE2E2', padding: '8px 12px', borderRadius: '8px', border: '1px solid #FECACA' }}>
+                <p style={{ color: 'var(--danger)', fontSize: '14px', margin: '8px 0', background: 'rgba(255,0,0,0.1)', padding: '8px', borderRadius: '4px' }}>
                   ❌ {quotaError}
                 </p>
               )}
 
               {quota && quota.totalHours > 0 && (
-                <div style={{ padding: '12px', background: '#EAF3FB', borderRadius: '8px', fontSize: '14px', border: '1px solid #D0D7E2' }}>
-                  <p style={{ margin: '0 0 6px 0', color: '#0F172A' }}>
+                <div style={{ padding: '12px', background: 'var(--card)', borderRadius: '4px', fontSize: '14px', border: '1px solid var(--accent)' }}>
+                  <p style={{ margin: '0 0 6px 0' }}>
                     <b>✅ Your Hour Quota:</b> {quota.availableHours}/{quota.totalHours} hours available
                   </p>
                   {quota.availableHours < 10 && (
-                    <p style={{ margin: 0, color: '#EF4444' }}>
+                    <p style={{ margin: 0, color: 'var(--danger)' }}>
                       ⚠️ Running low on hours. Request only what you need.
                     </p>
                   )}
@@ -216,8 +216,8 @@ export default function Home() {
                   type="button"
                   disabled
                   style={{
-                    background: '#FFFFFF',
-                    color: '#64748B',
+                    background: 'var(--card)',
+                    color: 'var(--muted)',
                     cursor: 'not-allowed',
                     opacity: 0.5,
                   }}
@@ -229,12 +229,11 @@ export default function Home() {
 
             {message && (
               <p style={{ 
-                padding: '12px 16px', 
-                borderRadius: '8px', 
-                background: message.includes('✅') ? '#ECFDF5' : '#FEE2E2',
-                color: message.includes('✅') ? '#22C55E' : '#EF4444',
-                marginTop: '16px',
-                border: `1px solid ${message.includes('✅') ? '#D1FAE5' : '#FECACA'}`
+                padding: '12px', 
+                borderRadius: '4px', 
+                background: message.includes('✅') ? 'rgba(0,255,0,0.1)' : 'rgba(255,0,0,0.1)',
+                color: message.includes('✅') ? 'var(--accent)' : 'var(--danger)',
+                marginTop: '16px'
               }}>
                 {message}
               </p>
@@ -243,38 +242,35 @@ export default function Home() {
 
           <div style={{ flex: 1 }}>
             <div className="card">
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', color: '#0F172A' }}>Track Your Request</h3>
-              <p style={{ margin: '0 0 16px 0', color: '#475569', fontSize: '14px' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Track Your Request</h3>
+              <p style={{ margin: '0 0 16px 0', color: 'var(--muted)', fontSize: '14px' }}>
                 Already submitted a request? Track its status here.
               </p>
               <Link
                 href="/track-request"
                 style={{
                   display: 'inline-block',
-                  background: '#0077C8',
+                  background: 'var(--accent)',
                   color: '#fff',
                   padding: '10px 16px',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   textDecoration: 'none',
                   fontWeight: 600,
-                  transition: 'background-color 0.2s ease',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#005FA3'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0077C8'}
               >
                 Track Request Status
               </Link>
             </div>
 
             <div className="card">
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', color: '#0F172A' }}>How It Works</h3>
-              <ol style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '14px' }}>
-                <li style={{ margin: '8px 0', color: '#0F172A' }}>✅ Check your available quota</li>
-                <li style={{ margin: '8px 0', color: '#0F172A' }}>📝 Submit your site visit request</li>
-                <li style={{ margin: '8px 0', color: '#0F172A' }}>📋 Our team reviews and approves</li>
-                <li style={{ margin: '8px 0', color: '#0F172A' }}>📅 We schedule the visit</li>
-                <li style={{ margin: '8px 0', color: '#0F172A' }}>🔧 Technician completes the work</li>
-                <li style={{ margin: '8px 0', color: '#0F172A' }}>✔️ You confirm completion</li>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>How It Works</h3>
+              <ol style={{ margin: 0, paddingLeft: '20px', color: 'var(--muted)', fontSize: '14px' }}>
+                <li style={{ margin: '8px 0' }}>✅ Check your available quota</li>
+                <li style={{ margin: '8px 0' }}>📝 Submit your site visit request</li>
+                <li style={{ margin: '8px 0' }}>📋 Our team reviews and approves</li>
+                <li style={{ margin: '8px 0' }}>📅 We schedule the visit</li>
+                <li style={{ margin: '8px 0' }}>🔧 Technician completes the work</li>
+                <li style={{ margin: '8px 0' }}>✔️ You confirm completion</li>
               </ol>
             </div>
           </div>
