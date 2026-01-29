@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
 export default function Home() {
@@ -11,6 +11,38 @@ export default function Home() {
   const [quotaError, setQuotaError] = useState('')
   const [email, setEmail] = useState('')
   const [quotaChecked, setQuotaChecked] = useState(false)
+  const [savedEmails, setSavedEmails] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const emailInputRef = useRef<HTMLInputElement>(null)
+
+  // Load saved emails from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('tsm_saved_emails')
+    if (stored) {
+      try {
+        const emails = JSON.parse(stored)
+        if (Array.isArray(emails)) {
+          setSavedEmails(emails)
+        }
+      } catch {
+        // Invalid stored data, ignore
+      }
+    }
+  }, [])
+
+  // Save email to localStorage when quota check succeeds
+  const saveEmail = (emailToSave: string) => {
+    const normalized = emailToSave.toLowerCase().trim()
+    if (!normalized) return
+
+    setSavedEmails(prev => {
+      // Remove if exists, add to front (most recent first)
+      const filtered = prev.filter(e => e.toLowerCase() !== normalized)
+      const updated = [normalized, ...filtered].slice(0, 10) // Keep max 10
+      localStorage.setItem('tsm_saved_emails', JSON.stringify(updated))
+      return updated
+    })
+  }
 
   async function checkQuota() {
     setCheckingQuota(true)
@@ -34,6 +66,7 @@ export default function Home() {
         } else {
           setQuota(data)
           setQuotaChecked(true)
+          saveEmail(email) // Save successful email for future autocomplete
         }
       } else {
         setQuotaError('Email not registered in quota system. Please contact support.')
@@ -57,10 +90,6 @@ export default function Home() {
 
     const formData = new FormData(form)
 
-    // Note: Quota is no longer checked at submission time.
-    // Actual hours will be deducted when technician records the visit.
-    // We still collect estimated_hours for planning purposes.
-
     try {
       const res = await fetch('/api/request', {
         method: 'POST',
@@ -73,7 +102,7 @@ export default function Home() {
           site_location: formData.get('location'),
           problem_desc: formData.get('problem'),
           requested_date: formData.get('date'),
-          estimated_hours: Number(formData.get('estimated_hours')),
+          estimated_hours: 0, // Not collected from form - actual hours used for billing
         }),
       })
 
@@ -127,24 +156,84 @@ export default function Home() {
               />
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '16px', position: 'relative' }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
                 Email Address
               </label>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <input
-                  type="email"
-                  placeholder="your.email@company.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    setQuotaChecked(false)
-                    setQuota(null)
-                    setQuotaError('')
-                  }}
-                  required
-                  style={{ flex: 1 }}
-                />
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <input
+                    ref={emailInputRef}
+                    type="email"
+                    placeholder="your.email@company.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      setQuotaChecked(false)
+                      setQuota(null)
+                      setQuotaError('')
+                      setShowSuggestions(true)
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    required
+                    style={{ width: '100%' }}
+                    autoComplete="off"
+                  />
+                  {/* Email autocomplete dropdown */}
+                  {showSuggestions && savedEmails.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      background: '#FFFFFF',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '6px',
+                      marginTop: '4px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      zIndex: 10,
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                    }}>
+                      {savedEmails
+                        .filter(savedEmail => savedEmail.toLowerCase().includes(email.toLowerCase()))
+                        .map((savedEmail, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              setEmail(savedEmail)
+                              setShowSuggestions(false)
+                              setQuotaChecked(false)
+                              setQuota(null)
+                              setQuotaError('')
+                            }}
+                            style={{
+                              display: 'block',
+                              width: '100%',
+                              padding: '10px 12px',
+                              textAlign: 'left',
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              color: '#0F172A',
+                              borderBottom: index < savedEmails.length - 1 ? '1px solid #F1F5F9' : 'none',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#F8FAFC'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'transparent'
+                            }}
+                          >
+                            {savedEmail}
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={checkQuota}
@@ -220,33 +309,15 @@ export default function Home() {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
-                      Preferred Date
-                    </label>
-                    <input
-                      type="date"
-                      name="date"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
-                      Estimated Hours
-                    </label>
-                    <input
-                      type="number"
-                      name="estimated_hours"
-                      placeholder="e.g. 4"
-                      min="1"
-                      max="999"
-                      required
-                    />
-                    <small style={{ display: 'block', marginTop: '4px', fontSize: '12px', color: '#64748B' }}>
-                      For planning only - actual hours will be billed
-                    </small>
-                  </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                    Preferred Date
+                  </label>
+                  <input
+                    type="date"
+                    name="date"
+                    required
+                  />
                 </div>
 
                 <button type="submit" disabled={loading} style={{ width: '100%' }}>
