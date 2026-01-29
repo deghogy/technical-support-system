@@ -56,13 +56,10 @@ export default function Home() {
     setMessage('')
 
     const formData = new FormData(form)
-    const estimatedHours = Number(formData.get('estimated_hours'))
 
-    if (quota && quota.availableHours < estimatedHours) {
-      setMessage(`Insufficient quota. You have ${quota.availableHours} hours available but need ${estimatedHours} hours.`)
-      setLoading(false)
-      return
-    }
+    // Note: Quota is no longer checked at submission time.
+    // Actual hours will be deducted when technician records the visit.
+    // We still collect estimated_hours for planning purposes.
 
     try {
       const res = await fetch('/api/request', {
@@ -76,7 +73,7 @@ export default function Home() {
           site_location: formData.get('location'),
           problem_desc: formData.get('problem'),
           requested_date: formData.get('date'),
-          estimated_hours: estimatedHours,
+          estimated_hours: Number(formData.get('estimated_hours')),
         }),
       })
 
@@ -246,6 +243,9 @@ export default function Home() {
                       max="999"
                       required
                     />
+                    <small style={{ display: 'block', marginTop: '4px', fontSize: '12px', color: '#64748B' }}>
+                      For planning only - actual hours will be billed
+                    </small>
                   </div>
                 </div>
 
