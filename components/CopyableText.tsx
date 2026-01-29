@@ -16,19 +16,18 @@ export function CopyableText({ label, value }: { label: string; value: string })
   }
 
   return (
-    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
+    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: '#64748B' }}>
       {label}:{' '}
       <code
         onClick={handleCopy}
         style={{
-          background: 'var(--card)',
           padding: '4px 8px',
           borderRadius: '4px',
           cursor: 'pointer',
           userSelect: 'none',
           transition: 'all 0.2s ease',
-          backgroundColor: copied ? 'var(--accent)' : 'var(--card)',
-          color: copied ? 'white' : 'inherit',
+          backgroundColor: copied ? '#0077C8' : '#F1F5F9',
+          color: copied ? '#FFFFFF' : '#0F172A',
         }}
         title="Click to copy"
       >
