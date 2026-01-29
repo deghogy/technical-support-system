@@ -119,7 +119,7 @@ export default function Home() {
       })
 
       if (res.ok) {
-        toast.success('Request Submitted', 'Your site visit request has been submitted successfully. You will receive a confirmation email shortly.')
+        toast.success('Request Submitted', 'Your service request has been submitted successfully. You will receive a confirmation email shortly.')
         form.reset()
         setQuota(null)
         setQuotaChecked(false)
@@ -146,7 +146,7 @@ export default function Home() {
         <div>
           <div style={{ marginBottom: '24px' }}>
             <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>
-              Site Visit Request
+              Service Request
             </h1>
             <p style={{ fontSize: '15px', color: '#64748B', margin: 0 }}>
               Submit a technical support request for your site. Check your quota first to proceed.
@@ -455,7 +455,7 @@ export default function Home() {
             <ol style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {[
                 'Check your available quota',
-                'Submit site visit request',
+                'Submit service request',
                 'Our team reviews and approves',
                 'Visit is scheduled',
                 'Technician completes work',
