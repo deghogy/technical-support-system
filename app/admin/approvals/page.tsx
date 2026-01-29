@@ -54,64 +54,65 @@ export default async function ApprovalsPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {requests?.map((req) => (
-            <div key={req.id} className="card" style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '24px', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
+            <div key={req.id} className="card" style={{ padding: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '32px', alignItems: 'start' }}>
+                {/* Left Content */}
+                <div>
                   {/* Requester Info */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0F172A', margin: '0 0 4px 0' }}>
-                      {req.requester_name}
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '13px', color: '#64748B' }}>
-                      {req.requester_email}
-                    </p>
+                  <div style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                      <h3 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+                        {req.requester_name}
+                      </h3>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        color: '#64748B',
+                        background: '#F1F5F9',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                      }}>
+                        {req.requester_email}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Details Grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(140px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                     <div>
-                      <p style={{ margin: '0 0 2px 0', fontSize: '12px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
                         Location
                       </p>
-                      <p style={{ margin: 0, fontSize: '14px', color: '#0F172A', fontWeight: 500 }}>
+                      <p style={{ margin: 0, fontSize: '15px', color: '#0F172A', fontWeight: 500 }}>
                         {req.site_location}
                       </p>
                     </div>
                     <div>
-                      <p style={{ margin: '0 0 2px 0', fontSize: '12px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '11px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
                         Requested Date
                       </p>
-                      <p style={{ margin: 0, fontSize: '14px', color: '#0F172A', fontWeight: 500 }}>
+                      <p style={{ margin: 0, fontSize: '15px', color: '#0F172A', fontWeight: 500 }}>
                         {formatDateOnlyGMT7(req.requested_date)}
                       </p>
                     </div>
                   </div>
 
                   {/* Problem Description */}
-                  <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '6px', marginBottom: '12px' }}>
-                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                    <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
                       Problem Description
                     </p>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.5 }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
                       {req.problem_desc}
                     </p>
                   </div>
-
-                  {/* Estimated Hours */}
-                  <div style={{ display: 'flex', gap: '16px' }}>
-                    <div>
-                      <p style={{ margin: '0 0 2px 0', fontSize: '12px', color: '#64748B' }}>
-                        Estimated Hours
-                      </p>
-                      <p style={{ margin: 0, fontSize: '14px', color: '#0F172A', fontWeight: 600 }}>
-                        {req.estimated_hours}h
-                      </p>
-                    </div>
-                  </div>
                 </div>
 
-                {/* Actions */}
-                <div style={{ minWidth: '180px' }}>
+                {/* Actions - Right Side */}
+                <div style={{ minWidth: '200px', paddingLeft: '24px', borderLeft: '1px solid #E2E8F0' }}>
+                  <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                    Actions
+                  </p>
                   <ApprovalActions id={req.id} requestedDate={req.requested_date} />
                 </div>
               </div>

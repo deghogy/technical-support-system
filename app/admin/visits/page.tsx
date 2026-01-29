@@ -7,6 +7,16 @@ import QRCode from '@/components/QRCode'
 import { CopyableText } from '@/components/CopyableText'
 import { getBaseUrl } from '@/lib/env'
 
+// Calculate duration between two dates in hours
+function calculateDurationHours(startTime: string, endTime: string): string {
+  const start = new Date(startTime).getTime()
+  const end = new Date(endTime).getTime()
+  const diffMs = end - start
+  const diffHours = diffMs / (1000 * 60 * 60)
+  // Round to 1 decimal place
+  return diffHours.toFixed(1)
+}
+
 export default async function VisitsPage() {
   const supabase = await createSupabaseServerClient()
 
@@ -98,6 +108,11 @@ export default async function VisitsPage() {
                   <p style={{ margin: '6px 0', color: 'var(--muted)', fontSize: '14px' }}>
                     🕑 Ended: {formatDateGMT7(visit.actual_end_time)}
                   </p>
+                  {visit.actual_start_time && visit.actual_end_time && (
+                    <p style={{ margin: '6px 0', color: '#0F172A', fontSize: '14px', fontWeight: 500 }}>
+                      ⏱ Duration: {calculateDurationHours(visit.actual_start_time, visit.actual_end_time)} hours worked
+                    </p>
+                  )}
                   {visit.technician_notes && (
                     <p style={{ margin: '8px 0', padding: '8px', backgroundColor: 'var(--card)', borderRadius: '4px', fontSize: '14px' }}>
                       📝 {visit.technician_notes}

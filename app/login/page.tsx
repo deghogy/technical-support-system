@@ -100,9 +100,10 @@ export default function LoginPage() {
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
+            style={{ marginBottom: '16px' }}
           />
 
-          <button disabled={loading}>
+          <button disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Signing in...' : 'Login'}
           </button>
         </form>

@@ -64,23 +64,23 @@ export default function ApprovalActions({ id, requestedDate }: { id: string; req
           onClick={() => doAction('rejected')}
           disabled={loading}
           style={{
-            background: '#FFFFFF',
-            color: '#64748B',
+            background: '#FEF2F2',
+            color: '#DC2626',
             padding: '8px 14px',
             borderRadius: '6px',
-            border: '1px solid #D0D7E2',
+            border: '1px solid #FECACA',
             fontSize: '13px',
             fontWeight: 500,
             cursor: loading ? 'not-allowed' : 'pointer',
             opacity: loading ? 0.6 : 1,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#F8FAFC'
-            e.currentTarget.style.borderColor = '#64748B'
+            e.currentTarget.style.background = '#FEE2E2'
+            e.currentTarget.style.borderColor = '#EF4444'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#FFFFFF'
-            e.currentTarget.style.borderColor = '#D0D7E2'
+            e.currentTarget.style.background = '#FEF2F2'
+            e.currentTarget.style.borderColor = '#FECACA'
           }}
         >
           Reject

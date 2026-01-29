@@ -71,55 +71,79 @@ export default async function DashboardPage() {
 
       {/* Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
-        <div className="card" style={{ padding: '20px' }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+        {/* Pending - Amber/Warning */}
+        <div className="card" style={{
+          padding: '20px',
+          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+          border: '1px solid #FDE68A',
+          borderLeft: '4px solid #F59E0B',
+        }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
             Pending Requests
           </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, color: pending && pending > 0 ? '#0077C8' : '#0F172A', margin: 0 }}>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: pending && pending > 0 ? '#D97706' : '#78350F', margin: 0 }}>
             {pending ?? 0}
           </p>
           {pending && pending > 0 && (
             <Link
               href="/admin/approvals"
-              style={{ fontSize: '13px', color: '#0077C8', textDecoration: 'none', marginTop: '8px', display: 'inline-block' }}
+              style={{ fontSize: '13px', color: '#D97706', textDecoration: 'none', marginTop: '8px', display: 'inline-block', fontWeight: 500 }}
             >
               Review →
             </Link>
           )}
         </div>
 
-        <div className="card" style={{ padding: '20px' }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+        {/* Approved - Blue/Info */}
+        <div className="card" style={{
+          padding: '20px',
+          background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+          border: '1px solid #BFDBFE',
+          borderLeft: '4px solid #3B82F6',
+        }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
             Approved
           </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: '#2563EB', margin: 0 }}>
             {approved ?? 0}
           </p>
-          <p style={{ fontSize: '13px', color: '#64748B', margin: '8px 0 0 0' }}>
+          <p style={{ fontSize: '13px', color: '#3B82F6', margin: '8px 0 0 0' }}>
             Scheduled &amp; active
           </p>
         </div>
 
-        <div className="card" style={{ padding: '20px' }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+        {/* Completed - Green/Success */}
+        <div className="card" style={{
+          padding: '20px',
+          background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
+          border: '1px solid #BBF7D0',
+          borderLeft: '4px solid #22C55E',
+        }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
             Completed
           </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, color: '#22C55E', margin: 0 }}>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: '#16A34A', margin: 0 }}>
             {confirmed ?? 0}
           </p>
-          <p style={{ fontSize: '13px', color: '#64748B', margin: '8px 0 0 0' }}>
+          <p style={{ fontSize: '13px', color: '#22C55E', margin: '8px 0 0 0' }}>
             Customer confirmed
           </p>
         </div>
 
-        <div className="card" style={{ padding: '20px' }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+        {/* Rejected - Red/Danger */}
+        <div className="card" style={{
+          padding: '20px',
+          background: 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)',
+          border: '1px solid #FECACA',
+          borderLeft: '4px solid #EF4444',
+        }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
             Rejected
           </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: '#DC2626', margin: 0 }}>
             {rejected ?? 0}
           </p>
-          <p style={{ fontSize: '13px', color: '#64748B', margin: '8px 0 0 0' }}>
+          <p style={{ fontSize: '13px', color: '#EF4444', margin: '8px 0 0 0' }}>
             Declined requests
           </p>
         </div>
@@ -175,14 +199,10 @@ export default async function DashboardPage() {
                         {visit.problem_desc}
                       </p>
 
-                      <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#475569' }}>
+                      <div style={{ fontSize: '13px', color: '#475569' }}>
                         <span>
                           <span style={{ color: '#64748B' }}>Scheduled:</span>{' '}
                           <strong>{formatDateOnlyGMT7(visit.scheduled_date)}</strong>
-                        </span>
-                        <span>
-                          <span style={{ color: '#64748B' }}>Duration:</span>{' '}
-                          <strong>{visit.duration_hours}h</strong>
                         </span>
                       </div>
                     </div>

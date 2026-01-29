@@ -3,6 +3,23 @@
 import { useState } from 'react'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 
+function QRCode({ url }: { url: string }) {
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`
+
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <img
+        src={qrCodeUrl}
+        alt="QR Code"
+        style={{ width: '120px', height: '120px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}
+      />
+      <p style={{ fontSize: '11px', color: 'var(--muted)', margin: '6px 0 0 0' }}>
+        Scan to access
+      </p>
+    </div>
+  )
+}
+
 type SortOption = 'newest' | 'oldest' | 'location' | 'status'
 
 export default function TrackRequestPage() {
@@ -103,6 +120,7 @@ export default function TrackRequestPage() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
+          style={{ marginBottom: '12px' }}
         />
         <button type="submit" disabled={loading}>
           {loading ? 'Searching...' : 'Track Request'}
@@ -127,6 +145,7 @@ export default function TrackRequestPage() {
                 height: '24px',
                 borderRadius: '4px',
                 overflow: 'hidden',
+                position: 'relative',
               }}>
                 <div style={{
                   background: 'var(--accent)',
@@ -134,6 +153,18 @@ export default function TrackRequestPage() {
                   width: `${quota.totalHours === 0 ? 0 : (quota.usedHours / quota.totalHours) * 100}%`,
                   transition: 'width 0.3s ease',
                 }} />
+                <span style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: quota.usedHours / quota.totalHours > 0.5 ? '#fff' : 'var(--text)',
+                  textShadow: quota.usedHours / quota.totalHours > 0.5 ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
+                }}>
+                  {Math.round((quota.usedHours / quota.totalHours) * 100)}% used
+                </span>
               </div>
             </div>
             <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '80px', textAlign: 'right' }}>
@@ -271,32 +302,38 @@ export default function TrackRequestPage() {
                     paddingTop: 12,
                     borderTop: '1px solid rgba(255,255,255,0.04)',
                   }}>
-                    {/* Request ID & Dates */}
-                    <div style={{ marginBottom: 12 }}>
-                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Request ID</p>
-                      <code style={{
-                        background: 'var(--card)',
-                        padding: '6px 10px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        color: 'var(--text)',
-                      }}>
-                        {req.id}
-                      </code>
-                      <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
-                        Requested: {formatDateOnlyGMT7(req.requested_date)}
-                      </p>
-                    </div>
+                    {/* Visit ID with QR Code */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: req.visit_status === 'visit-completed' ? '1fr auto' : '1fr',
+                      gap: '16px',
+                      alignItems: 'start',
+                      marginBottom: 12,
+                      background: 'var(--card)',
+                      padding: '12px',
+                      borderRadius: '4px',
+                    }}>
+                      <div>
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Visit ID</p>
+                        <code style={{
+                          background: 'var(--card)',
+                          padding: '6px 10px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          color: 'var(--text)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}>
+                          {req.id}
+                        </code>
+                        <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
+                          Requested: {formatDateOnlyGMT7(req.requested_date)}
+                        </p>                      </div>
 
-                    {/* Estimated Hours */}
-                    {req.estimated_hours && (
-                      <div style={{ marginBottom: 12 }}>
-                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Estimated Duration</p>
-                        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text)' }}>
-                          {req.estimated_hours} hour{req.estimated_hours !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    )}
+                      {/* QR Code for visit confirmation */}
+                      {req.visit_status === 'visit-completed' && (
+                        <QRCode url={`${typeof window !== 'undefined' ? window.location.origin : ''}/confirm-visit/${req.id}`} />
+                      )}
+                    </div>
 
                     {/* Timeline Section */}
                     <div style={{
@@ -392,9 +429,25 @@ export default function TrackRequestPage() {
 
                 {/* Collapse Indicator */}
                 {!isExpanded && (
-                  <p style={{ margin: '0', fontSize: '12px', color: 'var(--muted)', marginTop: 8, textAlign: 'center' }}>
-                    ▼ Click to expand details
-                  </p>
+                  <div style={{
+                    marginTop: 12,
+                    padding: '8px 16px',
+                    background: 'rgba(255,255,255,0.03)',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                  }}
+                  >
+                    <span style={{ fontSize: '10px', color: 'var(--muted)' }}>▼</span>
+                    <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 500 }}>
+                      Click to expand details
+                    </span>
+                  </div>
                 )}
               </div>
             )

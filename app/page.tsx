@@ -273,13 +273,19 @@ export default function Home() {
                     Running low on hours. Request only what you need.
                   </p>
                 )}
-                <div style={{ width: '100%', height: '6px', background: '#DCFCE7', borderRadius: '3px', marginTop: '10px' }}>
-                  <div style={{
-                    width: `${(quota.availableHours / quota.totalHours) * 100}%`,
-                    height: '100%',
-                    background: '#22C55E',
-                    borderRadius: '3px',
-                  }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                  <div style={{ flex: 1, height: '8px', background: '#DCFCE7', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${(quota.availableHours / quota.totalHours) * 100}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #22C55E 0%, #16A34A 100%)',
+                      borderRadius: '4px',
+                      transition: 'width 0.3s ease',
+                    }} />
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#16A34A', minWidth: '40px', textAlign: 'right' }}>
+                    {Math.round((quota.availableHours / quota.totalHours) * 100)}%
+                  </span>
                 </div>
               </div>
             )}
