@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabaseServer'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import VisitRecorder from '@/components/VisitRecorder'
@@ -77,7 +78,7 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 0, marginBottom: '24px', borderBottom: '2px solid #E2E8F0' }}>
-        <a
+        <Link
           href="/admin/visits?tab=scheduled"
           style={{
             padding: '12px 24px',
@@ -104,8 +105,8 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
           }}>
             {scheduledCount}
           </span>
-        </a>
-        <a
+        </Link>
+        <Link
           href="/admin/visits?tab=recorded"
           style={{
             padding: '12px 24px',
@@ -132,7 +133,7 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
           }}>
             {recordedCount}
           </span>
-        </a>
+        </Link>
       </div>
 
       {/* Scheduled Visits Tab */}
