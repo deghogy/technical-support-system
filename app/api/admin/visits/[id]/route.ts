@@ -54,6 +54,18 @@ export async function POST(
 
     const validatedData = validationResult.data
 
+    // Get the request details early (needed for quota deduction and email)
+    const { data: requestData, error: requestError } = await supabase
+      .from('site_visit_requests')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (requestError || !requestData) {
+      logger.warn({ id, error: requestError }, 'Request not found for visit recording')
+      return NextResponse.json({ message: 'Request not found' }, { status: 404 })
+    }
+
     const updatePayload: any = {
       actual_start_time: validatedData.actual_start_time,
       actual_end_time: validatedData.actual_end_time,
@@ -119,15 +131,68 @@ export async function POST(
 
     logger.info({ id, visitStatus: 'visit-completed' }, 'Visit recording saved')
 
+    // Calculate actual hours and deduct from customer quota
+    try {
+      const startTime = new Date(validatedData.actual_start_time)
+      const endTime = new Date(validatedData.actual_end_time)
+      const actualHours = Math.ceil((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60))
+
+      if (actualHours > 0) {
+        // Get customer quota
+        const { data: quota } = await supabase
+          .from('customer_quotas')
+          .select('*')
+          .eq('customer_email', requestData.requester_email.toLowerCase())
+          .single()
+
+        if (quota) {
+          // Check if sufficient quota is available
+          const availableHours = quota.total_hours - quota.used_hours
+          if (actualHours > availableHours) {
+            logger.warn({
+              email: requestData.requester_email,
+              actualHours,
+              availableHours,
+              requestId: id
+            }, 'Insufficient quota for actual hours')
+            return NextResponse.json(
+              { message: `Insufficient quota. Actual hours (${actualHours}) exceed available hours (${availableHours})` },
+              { status: 400 }
+            )
+          }
+
+          // Deduct actual hours from quota
+          const newUsedHours = quota.used_hours + actualHours
+          await supabase
+            .from('customer_quotas')
+            .update({ used_hours: newUsedHours })
+            .eq('customer_email', requestData.requester_email.toLowerCase())
+
+          // Log the quota deduction with actual hours
+          await supabase
+            .from('quota_logs')
+            .insert({
+              customer_email: requestData.requester_email.toLowerCase(),
+              hours_deducted: actualHours,
+              reason: `Visit completed - ${requestData.site_location} (Actual: ${actualHours}h)`,
+            })
+
+          logger.info({
+            email: requestData.requester_email,
+            actualHours,
+            newUsedHours,
+            requestId: id
+          }, 'Quota deducted based on actual hours')
+        }
+      }
+    } catch (quotaError) {
+      logger.error({ error: quotaError, id }, 'Failed to deduct quota based on actual hours')
+      // Don't fail the visit recording if quota deduction fails - we still want to record the visit
+    }
+
     // Send completion email to customer only if already approved by admin
     try {
-      const { data: requestData } = await supabase
-        .from('site_visit_requests')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (requestData && requestData.status === 'approved') {
+      if (requestData.status === 'approved') {
         const confirmationLink = `${getBaseUrl()}/confirm-visit/${id}`
         await sendVisitCompletionEmail({
           adminEmail: user.email || FALLBACK_ADMIN_EMAIL,
