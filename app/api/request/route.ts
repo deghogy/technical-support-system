@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
           site_location: validatedData.site_location,
           problem_desc: validatedData.problem_desc,
           requested_date: validatedData.requested_date,
-          estimated_hours: validatedData.estimated_hours,
+          estimated_hours: validatedData.estimated_hours ?? 0,
+          support_type: validatedData.support_type,
         },
       ])
       .select('id')

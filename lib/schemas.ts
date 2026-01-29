@@ -34,8 +34,13 @@ export const createSiteVisitRequestSchema = z.object({
   estimated_hours: z
     .number()
     .int('Estimated hours must be a whole number')
-    .min(1, 'Estimated hours must be at least 1')
-    .max(999, 'Estimated hours must not exceed 999'),
+    .min(0, 'Estimated hours must be at least 0')
+    .max(999, 'Estimated hours must not exceed 999')
+    .optional(),
+  support_type: z
+    .enum(['remote', 'onsite'], {
+      errorMap: () => ({ message: 'Support type must be remote or onsite' }),
+    }),
 })
 
 export type CreateSiteVisitRequest = z.infer<typeof createSiteVisitRequestSchema>

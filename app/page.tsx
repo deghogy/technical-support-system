@@ -13,6 +13,7 @@ export default function Home() {
   const [quotaChecked, setQuotaChecked] = useState(false)
   const [savedEmails, setSavedEmails] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [supportType, setSupportType] = useState<'remote' | 'onsite'>('onsite')
   const emailInputRef = useRef<HTMLInputElement>(null)
 
   // Load saved emails from localStorage on mount
@@ -103,6 +104,7 @@ export default function Home() {
           problem_desc: formData.get('problem'),
           requested_date: formData.get('date'),
           estimated_hours: 0, // Not collected from form - actual hours used for billing
+          support_type: supportType,
         }),
       })
 
@@ -294,11 +296,70 @@ export default function Home() {
               <>
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
-                    Site Location
+                    Support Type
+                  </label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSupportType('onsite')}
+                      style={{
+                        flex: 1,
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        border: supportType === 'onsite' ? '2px solid #0077C8' : '1px solid #E2E8F0',
+                        background: supportType === 'onsite' ? '#EAF3FB' : '#FFFFFF',
+                        color: supportType === 'onsite' ? '#0077C8' : '#64748B',
+                        fontWeight: supportType === 'onsite' ? 600 : 400,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </svg>
+                      Direct Visit (On-site)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSupportType('remote')}
+                      style={{
+                        flex: 1,
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        border: supportType === 'remote' ? '2px solid #0077C8' : '1px solid #E2E8F0',
+                        background: supportType === 'remote' ? '#EAF3FB' : '#FFFFFF',
+                        color: supportType === 'remote' ? '#0077C8' : '#64748B',
+                        fontWeight: supportType === 'remote' ? 600 : 400,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                      </svg>
+                      Remote Support
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                    {supportType === 'remote' ? 'Location / Department' : 'Site Location'}
                   </label>
                   <input
                     name="location"
-                    placeholder="Enter site location"
+                    placeholder={supportType === 'remote' ? 'Enter location or department' : 'Enter site location'}
                     required
                   />
                 </div>
@@ -323,6 +384,10 @@ export default function Home() {
                     type="date"
                     name="date"
                     required
+                    style={{
+                      paddingLeft: '12px',
+                      paddingRight: '8px',
+                    }}
                   />
                 </div>
 

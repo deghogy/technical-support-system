@@ -175,6 +175,23 @@ input::placeholder, textarea::placeholder {
   color: var(--text-muted);
 }
 
+/* Date Input - Calendar Icon Positioning */
+input[type="date"] {
+  position: relative;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  margin-left: 0;
+  padding-left: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 /* Enterprise Tables */
 table {
   width: 100%;
