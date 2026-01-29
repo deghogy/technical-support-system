@@ -1,17 +1,17 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useToast, ToastContainer } from './Toast'
 
 export default function ApprovalActions({ id, requestedDate }: { id: string; requestedDate?: string }) {
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [scheduledDate, setScheduledDate] = useState(requestedDate || '')
   const [duration, setDuration] = useState<number>(2)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { toasts, toast, removeToast } = useToast()
 
   async function doAction(status: 'approved' | 'rejected', isScheduling = false) {
     setLoading(true)
-    setError('')
     try {
       const body = new FormData()
       body.append('status', status)
@@ -26,14 +26,23 @@ export default function ApprovalActions({ id, requestedDate }: { id: string; req
       })
 
       if (res.ok || res.redirected) {
-        window.location.href = '/admin/approvals'
+        toast.success(
+          status === 'approved' ? 'Request Approved' : 'Request Rejected',
+          status === 'approved' ? 'The site visit has been approved and scheduled' : 'The request has been rejected'
+        )
+        setTimeout(() => {
+          window.location.href = '/admin/approvals'
+        }, 1000)
       } else {
         const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
-        setError(errorData.details || errorData.message || 'Failed to perform action')
+        const errorMessage = errorData.errors
+          ? errorData.errors.map((err: any) => `• ${err.message}`).join('\n')
+          : errorData.details || errorData.message || 'Failed to perform action'
+        toast.error('Action Failed', errorMessage, 8000)
       }
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Failed to perform action')
+      toast.error('Error', err instanceof Error ? err.message : 'Failed to perform action')
     } finally {
       setLoading(false)
     }
@@ -170,19 +179,7 @@ export default function ApprovalActions({ id, requestedDate }: { id: string; req
         </div>
       )}
 
-      {error && (
-        <p style={{
-          color: '#DC2626',
-          fontSize: '13px',
-          background: '#FEF2F2',
-          padding: '8px 12px',
-          borderRadius: '6px',
-          border: '1px solid #FECACA',
-          margin: '8px 0 0 0',
-        }}>
-          {error}
-        </p>
-      )}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   )
 }

@@ -2,19 +2,19 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useToast, ToastContainer } from '@/components/Toast'
 
 export default function Home() {
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
   const [quota, setQuota] = useState<any>(null)
   const [checkingQuota, setCheckingQuota] = useState(false)
-  const [quotaError, setQuotaError] = useState('')
   const [email, setEmail] = useState('')
   const [quotaChecked, setQuotaChecked] = useState(false)
   const [savedEmails, setSavedEmails] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [supportType, setSupportType] = useState<'remote' | 'onsite'>('onsite')
   const emailInputRef = useRef<HTMLInputElement>(null)
+  const { toasts, toast, removeToast } = useToast()
 
   // Load saved emails from localStorage on mount
   useEffect(() => {
@@ -47,11 +47,10 @@ export default function Home() {
 
   async function checkQuota() {
     setCheckingQuota(true)
-    setQuotaError('')
     setQuota(null)
 
     if (!email) {
-      setQuotaError('Please enter your email first')
+      toast.error('Email Required', 'Please enter your email first')
       setCheckingQuota(false)
       return
     }
@@ -61,22 +60,23 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json()
         if (!data || data.totalHours === 0) {
-          setQuotaError('Email not registered in quota system. Please contact support.')
+          toast.error('Email Not Found', 'Email not registered in quota system. Please contact support.')
           setQuota(null)
           setQuotaChecked(false)
         } else {
           setQuota(data)
           setQuotaChecked(true)
-          saveEmail(email) // Save successful email for future autocomplete
+          saveEmail(email)
+          toast.success('Quota Verified', `You have ${data.availableHours} of ${data.totalHours} hours available`)
         }
       } else {
-        setQuotaError('Email not registered in quota system. Please contact support.')
+        toast.error('Email Not Found', 'Email not registered in quota system. Please contact support.')
         setQuota(null)
         setQuotaChecked(false)
       }
     } catch (error) {
       console.error(error)
-      setQuotaError('Error checking quota')
+      toast.error('Error', 'Failed to check quota. Please try again.')
     } finally {
       setCheckingQuota(false)
     }
@@ -87,7 +87,6 @@ export default function Home() {
 
     const form = e.currentTarget
     setLoading(true)
-    setMessage('')
 
     const formData = new FormData(form)
 
@@ -109,18 +108,21 @@ export default function Home() {
       })
 
       if (res.ok) {
-        setMessage('Request submitted successfully!')
+        toast.success('Request Submitted', 'Your site visit request has been submitted successfully. You will receive a confirmation email shortly.')
         form.reset()
         setQuota(null)
         setQuotaChecked(false)
         setEmail('')
       } else {
         const errorData = await res.json().catch(() => ({ message: 'Failed to submit request' }))
-        setMessage(errorData.message || 'Failed to submit request')
+        const errorMessage = errorData.errors
+          ? errorData.errors.map((err: any) => `• ${err.message}`).join('\n')
+          : errorData.message || 'Failed to submit request'
+        toast.error('Submission Error', errorMessage, 8000)
       }
     } catch (error) {
       console.error(error)
-      setMessage('Failed to submit request')
+      toast.error('Error', 'Failed to submit request. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -173,7 +175,6 @@ export default function Home() {
                       setEmail(e.target.value)
                       setQuotaChecked(false)
                       setQuota(null)
-                      setQuotaError('')
                       setShowSuggestions(true)
                     }}
                     onFocus={() => setShowSuggestions(true)}
@@ -209,7 +210,6 @@ export default function Home() {
                               setShowSuggestions(false)
                               setQuotaChecked(false)
                               setQuota(null)
-                              setQuotaError('')
                             }}
                             style={{
                               display: 'block',
@@ -257,13 +257,6 @@ export default function Home() {
               </div>
             </div>
 
-            {quotaError && (
-              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '12px', borderRadius: '6px', marginBottom: '16px' }}>
-                <p style={{ color: '#991B1B', fontSize: '13px', margin: 0 }}>
-                  {quotaError}
-                </p>
-              </div>
-            )}
 
             {quota && quota.totalHours > 0 && (
               <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', padding: '14px', borderRadius: '6px', marginBottom: '20px' }}>
@@ -397,40 +390,9 @@ export default function Home() {
               </>
             )}
 
-            {quotaChecked && quotaError && (
-              <button
-                type="button"
-                disabled
-                style={{
-                  width: '100%',
-                  background: '#F1F5F9',
-                  color: '#94A3B8',
-                  cursor: 'not-allowed',
-                  opacity: 0.8,
-                }}
-              >
-                Cannot proceed - contact support
-              </button>
-            )}
           </form>
 
-          {message && (
-            <div style={{
-              marginTop: '16px',
-              padding: '14px',
-              borderRadius: '6px',
-              background: message.includes('successfully') ? '#F0FDF4' : '#FEF2F2',
-              border: `1px solid ${message.includes('successfully') ? '#86EFAC' : '#FECACA'}`,
-            }}>
-              <p style={{
-                margin: 0,
-                fontSize: '14px',
-                color: message.includes('successfully') ? '#166534' : '#991B1B',
-              }}>
-                {message}
-              </p>
-            </div>
-          )}
+          <ToastContainer toasts={toasts} removeToast={removeToast} />
         </div>
 
         {/* Right Column - Info */}

@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
+import { useToast, ToastContainer } from '@/components/Toast'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { toasts, toast, removeToast } = useToast()
 
   // ✅ Check active session for display (do not auto-redirect)
   const [signedInUser, setSignedInUser] = useState<string | null>(null)
@@ -35,7 +36,6 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -45,9 +45,11 @@ export default function LoginPage() {
     setLoading(false)
 
     if (error) {
-      setError(error.message)
+      toast.error('Login Failed', error.message)
       return
     }
+
+    toast.success('Welcome Back!', 'Successfully signed in')
 
     // After sign-in, fetch session and role and redirect accordingly
     const { data: { session } } = await supabase.auth.getSession()
@@ -109,7 +111,7 @@ export default function LoginPage() {
         </form>
       )}
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </main>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
+import { useToast, ToastContainer } from '@/components/Toast'
 
 function QRCode({ url }: { url: string }) {
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`
@@ -27,15 +28,14 @@ export default function TrackRequestPage() {
   const [requests, setRequests] = useState<any[]>([])
   const [quota, setQuota] = useState<any>(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [searched, setSearched] = useState(false)
   const [sortBy, setSortBy] = useState<SortOption>('newest')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const { toasts, toast, removeToast } = useToast()
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
     setRequests([])
     setQuota(null)
     setSearched(true)
@@ -46,10 +46,12 @@ export default function TrackRequestPage() {
         const data = await res.json()
         setRequests(data.requests || [])
         if (data.requests.length === 0) {
-          setError('No requests found for this email address')
+          toast.warning('No Requests Found', 'No requests found for this email address')
+        } else {
+          toast.success('Requests Loaded', `Found ${data.requests.length} request(s)`)
         }
       } else {
-        setError('Failed to load requests')
+        toast.error('Error', 'Failed to load requests')
       }
 
       // Load quota
@@ -60,7 +62,7 @@ export default function TrackRequestPage() {
       }
     } catch (err) {
       console.error(err)
-      setError('Failed to load requests')
+      toast.error('Error', 'Failed to load requests. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -127,11 +129,6 @@ export default function TrackRequestPage() {
         </button>
       </form>
 
-      {error && searched && (
-        <div className="card" style={{ borderColor: 'var(--danger)' }}>
-          <p style={{ color: 'var(--danger)', margin: 0 }}>❌ {error}</p>
-        </div>
-      )}
 
       {searched && quota && (
         <div className="card" style={{ marginBottom: 20, background: 'var(--card)' }}>
@@ -243,7 +240,7 @@ export default function TrackRequestPage() {
         </div>
       )}
 
-      {searched && requests.length === 0 && !error && (
+      {searched && requests.length === 0 && (
         <div className="card" style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--muted)', margin: 0 }}>No requests found for this email address</p>
         </div>
@@ -454,6 +451,8 @@ export default function TrackRequestPage() {
           })}
         </div>
       )}
+
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </main>
   )
 }

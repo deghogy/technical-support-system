@@ -1,17 +1,17 @@
 'use client'
 
 import { useState } from 'react'
+import { useToast, ToastContainer } from './Toast'
 
 export default function VisitRejector({ id }: { id: string }) {
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { toasts, toast, removeToast } = useToast()
 
   async function handleReject(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
 
     try {
       const res = await fetch(`/api/admin/visits/${id}/reject`, {
@@ -21,14 +21,18 @@ export default function VisitRejector({ id }: { id: string }) {
       })
 
       if (res.ok) {
-        window.location.reload()
+        toast.success('Visit Rejected', 'The visit has been rejected and the customer will be notified')
+        setTimeout(() => window.location.reload(), 1500)
       } else {
         const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
-        setError(errorData.details || errorData.message || 'Failed to reject visit')
+        const errorMessage = errorData.errors
+          ? errorData.errors.map((err: any) => `• ${err.message}`).join('\n')
+          : errorData.details || errorData.message || 'Failed to reject visit'
+        toast.error('Rejection Failed', errorMessage, 8000)
       }
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Failed to reject visit')
+      toast.error('Error', err instanceof Error ? err.message : 'Failed to reject visit')
     } finally {
       setLoading(false)
     }
@@ -76,7 +80,7 @@ export default function VisitRejector({ id }: { id: string }) {
             {loading ? 'Rejecting...' : 'Confirm Rejection'}
           </button>
 
-          {error && <p style={{ color: 'var(--danger)', margin: '8px 0 0 0' }}>{error}</p>}
+          <ToastContainer toasts={toasts} removeToast={removeToast} />
         </form>
       )}
     </div>
