@@ -81,11 +81,12 @@ export async function sendScheduleConfirmationEmail({
   requesterName: string
   siteLocation: string
   scheduledDate: string
-  durationHours: number
+  durationHours?: number
   trackingLink: string
 }) {
   try {
     const resend = getResendClient()
+    const durationText = durationHours ? `<p><strong>Expected Duration:</strong> ${durationHours} hours</p>` : ''
     const result = await resend.emails.send({
       from: 'onboarding@resend.dev',
       to: adminEmail,
@@ -97,7 +98,7 @@ export async function sendScheduleConfirmationEmail({
         <div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
           <p><strong>Location:</strong> ${siteLocation}</p>
           <p><strong>Scheduled Date:</strong> ${scheduledDate}</p>
-          <p><strong>Expected Duration:</strong> ${durationHours} hours</p>
+          ${durationText}
         </div>
         <p>
           <a href="${trackingLink}" style="background-color: #1e90ff; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold;">

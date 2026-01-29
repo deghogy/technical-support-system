@@ -54,13 +54,14 @@ export const approvalSchema = z.object({
   duration_hours: z.coerce.number().int().min(1).max(24).optional(),
 }).refine(
   (data) => {
-    // If approving, scheduled_date and duration_hours should be provided
-    if (data.status === 'approved') {
-      return data.scheduled_date !== undefined && data.duration_hours !== undefined
+    // If approving with scheduling, only scheduled_date is required
+    // duration_hours is optional and will be recorded during actual visit
+    if (data.status === 'approved' && data.scheduled_date) {
+      return data.scheduled_date !== undefined
     }
     return true
   },
-  { message: 'Approved requests must have scheduled_date and duration_hours' }
+  { message: 'Approved requests must have a scheduled_date' }
 )
 
 /**

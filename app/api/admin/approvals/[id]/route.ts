@@ -116,7 +116,7 @@ export async function POST(
           requesterName: requestData.requester_name,
           siteLocation: requestData.site_location,
           scheduledDate: formattedDate,
-          durationHours: validatedData.duration_hours ? Number(validatedData.duration_hours) : requestData.estimated_hours,
+          durationHours: validatedData.duration_hours ? Number(validatedData.duration_hours) : undefined,
           trackingLink: `${getBaseUrl()}/track-request`,
         })
 

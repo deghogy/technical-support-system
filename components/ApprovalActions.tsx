@@ -6,7 +6,6 @@ import { useToast, ToastContainer } from './Toast'
 export default function ApprovalActions({ id, requestedDate }: { id: string; requestedDate?: string }) {
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [scheduledDate, setScheduledDate] = useState(requestedDate || '')
-  const [duration, setDuration] = useState<number>(2)
   const [loading, setLoading] = useState(false)
   const { toasts, toast, removeToast } = useToast()
 
@@ -17,7 +16,6 @@ export default function ApprovalActions({ id, requestedDate }: { id: string; req
       body.append('status', status)
       if (isScheduling) {
         body.append('scheduled_date', scheduledDate)
-        body.append('duration_hours', String(duration))
       }
 
       const res = await fetch(`/api/admin/approvals/${id}`, {
@@ -106,7 +104,7 @@ export default function ApprovalActions({ id, requestedDate }: { id: string; req
             marginTop: '8px',
           }}
         >
-          <div style={{ marginBottom: '12px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', marginBottom: '6px' }}>
               <span style={{
                 fontSize: '13px',
@@ -124,33 +122,6 @@ export default function ApprovalActions({ id, requestedDate }: { id: string; req
               style={{
                 display: 'block',
                 width: '100%',
-                padding: '8px 10px',
-                border: '1px solid #D0D7E2',
-                borderRadius: '6px',
-                fontSize: '13px',
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px' }}>
-              <span style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#0F172A'
-              }}>
-                Duration (hours)
-              </span>
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={duration}
-              onChange={e => setDuration(Number(e.target.value))}
-              style={{
-                display: 'block',
-                width: '100%',
-                maxWidth: '120px',
                 padding: '8px 10px',
                 border: '1px solid #D0D7E2',
                 borderRadius: '6px',
