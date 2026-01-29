@@ -1,12 +1,12 @@
-import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabaseServer'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import VisitRecorder from '@/components/VisitRecorder'
 import VisitRejector from '@/components/VisitRejector'
 import QRCode from '@/components/QRCode'
 import { CopyableText } from '@/components/CopyableText'
 import { getBaseUrl } from '@/lib/env'
-import VisitTabs from '@/components/VisitTabs'
 
 // Calculate duration between two dates in hours
 function calculateDurationHours(startTime: string, endTime: string): string {
@@ -21,48 +21,52 @@ function isRemoteVisit(location: string): boolean {
   return location?.includes('Automation - Boccard Indonesia') || false
 }
 
-export default async function VisitsPage({ searchParams }: { searchParams: { tab?: string } }) {
-  const supabase = await createSupabaseServerClient()
-  const activeTab = searchParams.tab || 'scheduled'
+export default function VisitsPage() {
+  const [activeTab, setActiveTab] = useState<'scheduled' | 'recorded'>('scheduled')
+  const [scheduledVisits, setScheduledVisits] = useState<any[]>([])
+  const [recordedVisits, setRecordedVisits] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  useEffect(() => {
+    async function loadVisits() {
+      try {
+        // Fetch both types of visits
+        const [scheduledRes, recordedRes] = await Promise.all([
+          fetch('/api/admin/visits?type=scheduled'),
+          fetch('/api/admin/visits?type=recorded')
+        ])
 
-  if (!user) {
-    redirect('/login')
+        if (scheduledRes.ok) {
+          const data = await scheduledRes.json()
+          setScheduledVisits(data.visits || [])
+        }
+
+        if (recordedRes.ok) {
+          const data = await recordedRes.json()
+          setRecordedVisits(data.visits || [])
+        }
+      } catch (err) {
+        console.error('Failed to load visits:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadVisits()
+    // Refresh every 10 seconds
+    const interval = setInterval(loadVisits, 10000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (loading) {
+    return (
+      <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
+        <div style={{ textAlign: 'center', padding: '64px 24px' }}>
+          <p style={{ color: '#64748B' }}>Loading visits...</p>
+        </div>
+      </main>
+    )
   }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!['admin', 'approver'].includes(profile?.role ?? '')) {
-    redirect('/')
-  }
-
-  // Get scheduled visits that haven't been recorded yet
-  const { data: scheduledVisits } = await supabase
-    .from('site_visit_requests')
-    .select('*')
-    .eq('status', 'approved')
-    .not('scheduled_date', 'is', null)
-    .is('actual_start_time', null)
-    .order('scheduled_date', { ascending: true })
-
-  // Get visits that have been recorded but not yet confirmed by customer
-  const { data: recordedVisits } = await supabase
-    .from('site_visit_requests')
-    .select('*')
-    .eq('status', 'approved')
-    .not('actual_start_time', 'is', null)
-    .is('customer_confirmed_at', null)
-    .order('actual_start_time', { ascending: false })
-
-  const scheduledCount = scheduledVisits?.length || 0
-  const recordedCount = recordedVisits?.length || 0
 
   return (
     <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
@@ -77,12 +81,27 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
       </div>
 
       {/* Tabs */}
-      <VisitTabs activeTab={activeTab} scheduledCount={scheduledCount} recordedCount={recordedCount} />
+      <div className="visit-tabs">
+        <button
+          className={`visit-tab ${activeTab === 'scheduled' ? 'active' : ''}`}
+          onClick={() => setActiveTab('scheduled')}
+        >
+          <span>Scheduled</span>
+          <span className="visit-tab-badge">{scheduledVisits.length}</span>
+        </button>
+        <button
+          className={`visit-tab ${activeTab === 'recorded' ? 'active' : ''}`}
+          onClick={() => setActiveTab('recorded')}
+        >
+          <span>Recorded</span>
+          <span className="visit-tab-badge">{recordedVisits.length}</span>
+        </button>
+      </div>
 
       {/* Scheduled Visits Tab */}
       {activeTab === 'scheduled' && (
         <div>
-          {scheduledCount === 0 ? (
+          {scheduledVisits.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>📅</div>
               <p style={{ color: '#64748B', margin: '0 0 8px 0', fontSize: '15px' }}>
@@ -94,7 +113,7 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {scheduledVisits?.map((visit) => {
+              {scheduledVisits.map((visit) => {
                 const isRemote = isRemoteVisit(visit.site_location)
 
                 return (
@@ -106,7 +125,7 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
                       borderLeft: isRemote ? '4px solid #8B5CF6' : '4px solid #0077C8',
                     }}
                   >
-                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                       {/* Type Indicator */}
                       <div style={{
                         display: 'flex',
@@ -130,8 +149,8 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
                       </div>
 
                       {/* Content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <div style={{ flex: 1, minWidth: '250px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                           <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
                             {visit.requester_name}
                           </h3>
@@ -161,13 +180,10 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
                           background: '#F8FAFC',
                           borderRadius: '6px',
                           marginBottom: '12px',
+                          flexWrap: 'wrap',
                         }}>
                           <span style={{ fontSize: '13px', color: '#475569' }}>
                             📅 <strong>{formatDateOnlyGMT7(visit.scheduled_date)}</strong>
-                          </span>
-                          <span style={{ color: '#D0D7E2' }}>|</span>
-                          <span style={{ fontSize: '13px', color: '#475569' }}>
-                            ⏱ {visit.duration_hours}h
                           </span>
                         </div>
 
@@ -191,7 +207,7 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
       {/* Recorded Visits Tab */}
       {activeTab === 'recorded' && (
         <div>
-          {recordedCount === 0 ? (
+          {recordedVisits.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>✅</div>
               <p style={{ color: '#64748B', margin: '0 0 8px 0', fontSize: '15px' }}>
@@ -203,7 +219,7 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {recordedVisits?.map((visit) => {
+              {recordedVisits.map((visit) => {
                 const isRemote = isRemoteVisit(visit.site_location)
 
                 return (
@@ -215,7 +231,7 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
                       borderLeft: isRemote ? '4px solid #8B5CF6' : '4px solid #22C55E',
                     }}
                   >
-                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                       {/* Type Indicator */}
                       <div style={{
                         display: 'flex',
@@ -239,8 +255,8 @@ export default async function VisitsPage({ searchParams }: { searchParams: { tab
                       </div>
 
                       {/* Content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <div style={{ flex: 1, minWidth: '250px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                           <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
                             {visit.requester_name}
                           </h3>

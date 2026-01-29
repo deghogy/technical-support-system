@@ -1,19 +1,49 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
-import { createSupabaseServerClient } from '@/lib/supabaseServer'
+import { useState, useEffect } from 'react'
 import UserMenu from '@/components/UserMenu'
+import { supabase } from '@/lib/supabaseClient'
 
-export default async function Header() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function Header() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
-  const profile = user
-    ? await supabase.from('profiles').select('role').eq('id', user.id).single()
-    : null
+  useEffect(() => {
+    async function getUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
 
-  const userRole = profile?.data?.role
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        setUserRole(profile?.role || null)
+      }
+    }
+    getUser()
+  }, [])
+
+  const navLinks = []
+  if (user && userRole === 'admin') {
+    navLinks.push(
+      { href: '/admin/dashboard', label: 'Dashboard' },
+      { href: '/admin/approvals', label: 'Approvals' },
+      { href: '/admin/visits', label: 'Visits' },
+      { href: '/admin/history', label: 'History' },
+      { href: '/admin/quotas', label: 'Quotas' }
+    )
+  } else if (user && userRole === 'approver') {
+    navLinks.push(
+      { href: '/admin/approvals', label: 'Approvals' },
+      { href: '/admin/visits', label: 'Visits' },
+      { href: '/admin/history', label: 'History' }
+    )
+  }
 
   return (
     <header
@@ -63,137 +93,93 @@ export default async function Header() {
               letterSpacing: '0.3px',
             }}
           >
-            Boccard Technical Support
+            <span className="site-title-full">Boccard Technical Support</span>
+            <span className="site-title-short">Boccard Tech</span>
           </span>
         </Link>
 
-        <nav style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {user && userRole === 'admin' && (
-            <>
-              <Link
-                href="/admin/dashboard"
-                style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/admin/approvals"
-                style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                Approvals
-              </Link>
-              <Link
-                href="/admin/visits"
-                style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                Visits
-              </Link>
-              <Link
-                href="/admin/history"
-                style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                History
-              </Link>
-              <Link
-                href="/admin/quotas"
-                style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                Quotas
-              </Link>
-            </>
-          )}
-          {user && userRole === 'approver' && (
-            <>
-              <Link
-                href="/admin/approvals"
-                style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                Approvals
-              </Link>
-              <Link
-                href="/admin/visits"
-                style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                Visits
-              </Link>
-              <Link
-                href="/admin/history"
-                style={{
-                  color: 'rgba(255,255,255,0.9)',
-                  textDecoration: 'none',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                History
-              </Link>
-            </>
-          )}
+        {/* Desktop Nav */}
+        <nav className="desktop-nav" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              style={{
+                color: 'rgba(255,255,255,0.9)',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: 500,
+                padding: '8px 12px',
+                borderRadius: '6px',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
 
           <div style={{ marginLeft: '8px' }}>
-            <UserMenu user={user} role={userRole} />
+            <UserMenu user={user} role={userRole || undefined} />
           </div>
         </nav>
+
+        {/* Mobile Menu Button */}
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{
+            display: 'none',
+            background: 'transparent',
+            border: 'none',
+            color: '#FFFFFF',
+            padding: '8px',
+            cursor: 'pointer',
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            {mobileMenuOpen ? (
+              <path d="M18 6L6 18M6 6l12 12" />
+            ) : (
+              <path d="M3 12h18M3 6h18M3 18h18" />
+            )}
+          </svg>
+        </button>
       </div>
+
+      {/* Mobile Nav */}
+      {mobileMenuOpen && (
+        <div
+          className="mobile-nav"
+          style={{
+            display: 'none',
+            background: '#005FA3',
+            padding: '12px 16px',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                display: 'block',
+                color: '#FFFFFF',
+                textDecoration: 'none',
+                fontSize: '15px',
+                fontWeight: 500,
+                padding: '12px 0',
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div style={{ padding: '12px 0' }}>
+            <UserMenu user={user} role={userRole || undefined} />
+          </div>
+        </div>
+      )}
     </header>
   )
 }

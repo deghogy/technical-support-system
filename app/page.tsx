@@ -141,7 +141,7 @@ export default function Home() {
 
   return (
     <main className="container-sm" style={{ paddingTop: '40px', paddingBottom: '60px', maxWidth: '1000px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 0.85fr', gap: '40px', alignItems: 'flex-start' }}>
+      <div className="main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 0.85fr', gap: '40px', alignItems: 'flex-start' }}>
         {/* Left Column - Form */}
         <div>
           <div style={{ marginBottom: '24px' }}>
@@ -175,8 +175,8 @@ export default function Home() {
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
                 Email Address
               </label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <div style={{ flex: 1, position: 'relative' }}>
+              <div className="email-quota-row" style={{ display: 'flex', gap: '10px' }}>
+                <div className="email-input-wrapper" style={{ flex: 1, position: 'relative' }}>
                   <input
                     ref={emailInputRef}
                     type="email"
@@ -302,7 +302,7 @@ export default function Home() {
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
                     Support Type
                   </label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                  <div className="support-type-buttons" style={{ display: 'flex', gap: '12px' }}>
                     <button
                       type="button"
                       onClick={() => setSupportType('onsite')}

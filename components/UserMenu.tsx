@@ -44,7 +44,7 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
           transition: 'all 0.15s ease',
         }}
       >
-        Login
+        Admin Login
       </a>
     )
   }
