@@ -99,7 +99,7 @@ export default function Home() {
         body: JSON.stringify({
           requester_name: formData.get('name'),
           requester_email: email,
-          site_location: formData.get('location'),
+          site_location: supportType === 'remote' ? 'Automation - Boccard Indonesia' : formData.get('location'),
           problem_desc: formData.get('problem'),
           requested_date: formData.get('date'),
           estimated_hours: 0, // Not collected from form - actual hours used for billing
@@ -348,13 +348,26 @@ export default function Home() {
 
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
-                    {supportType === 'remote' ? 'Location / Department' : 'Site Location'}
+                    {supportType === 'remote' ? 'Department' : 'Site Location'}
                   </label>
-                  <input
-                    name="location"
-                    placeholder={supportType === 'remote' ? 'Enter location or department' : 'Enter site location'}
-                    required
-                  />
+                  {supportType === 'remote' ? (
+                    <input
+                      name="location"
+                      value="Automation - Boccard Indonesia"
+                      readOnly
+                      style={{
+                        background: '#F1F5F9',
+                        color: '#475569',
+                        cursor: 'not-allowed',
+                      }}
+                    />
+                  ) : (
+                    <input
+                      name="location"
+                      placeholder="Enter site location"
+                      required
+                    />
+                  )}
                 </div>
 
                 <div style={{ marginBottom: '16px' }}>
