@@ -53,8 +53,18 @@ export async function POST(
 
     if (!validationResult.success) {
       logger.info({ errors: validationResult.error.errors, id }, 'Visit confirmation validation failed')
+
+      // Format validation errors into user-friendly messages
+      const errorMessages = validationResult.error.errors.map(err => {
+        return `• ${err.message}`
+      }).join('\n')
+
       return NextResponse.json(
-        { message: 'Invalid confirmation data', errors: validationResult.error.errors },
+        {
+          message: 'Please fix the following issues:',
+          details: errorMessages,
+          errors: validationResult.error.errors
+        },
         { status: 400 }
       )
     }

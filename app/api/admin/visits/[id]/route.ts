@@ -46,8 +46,25 @@ export async function POST(
 
     if (!validationResult.success) {
       logger.info({ errors: validationResult.error.errors, id }, 'Visit recording validation failed')
+
+      // Format validation errors into user-friendly messages
+      const errorMessages = validationResult.error.errors.map(err => {
+        const path = err.path.join('.')
+        if (path === 'actual_start_time') {
+          return '• Start time: ' + (err.message.includes('Invalid') ? 'Please enter a valid start date and time' : err.message)
+        }
+        if (path === 'actual_end_time') {
+          return '• End time: ' + (err.message.includes('Invalid') ? 'Please enter a valid end date and time' : err.message)
+        }
+        return `• ${err.message}`
+      }).join('\n')
+
       return NextResponse.json(
-        { message: 'Invalid visit recording data', errors: validationResult.error.errors },
+        {
+          message: 'Please fix the following issues:',
+          details: errorMessages,
+          errors: validationResult.error.errors
+        },
         { status: 400 }
       )
     }

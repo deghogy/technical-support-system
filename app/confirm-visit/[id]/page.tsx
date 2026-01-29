@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { formatDateGMT7 } from '@/lib/dateFormatter'
+import { useToast, ToastContainer } from '@/components/Toast'
 
 export default function ConfirmVisitPage() {
   const params = useParams()
@@ -12,15 +13,15 @@ export default function ConfirmVisitPage() {
   const [loading, setLoading] = useState(true)
   const [confirming, setConfirming] = useState(false)
   const [customerNotes, setCustomerNotes] = useState('')
-  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const { toasts, toast, removeToast } = useToast()
 
   useEffect(() => {
     async function loadVisit() {
       try {
         const res = await fetch(`/api/confirm-visit/${id}`)
         if (!res.ok) {
-          setError('Visit not found or already confirmed')
+          toast.error('Error', 'Visit not found or already confirmed')
           setLoading(false)
           return
         }
@@ -29,18 +30,17 @@ export default function ConfirmVisitPage() {
         setLoading(false)
       } catch (err) {
         console.error(err)
-        setError('Failed to load visit details')
+        toast.error('Error', 'Failed to load visit details')
         setLoading(false)
       }
     }
 
     loadVisit()
-  }, [id])
+  }, [id, toast])
 
   async function handleConfirm(e: React.FormEvent) {
     e.preventDefault()
     setConfirming(true)
-    setError('')
 
     try {
       const res = await fetch(`/api/confirm-visit/${id}`, {
@@ -52,13 +52,15 @@ export default function ConfirmVisitPage() {
       if (res.ok) {
         setSuccess(true)
         setCustomerNotes('')
+        toast.success('Visit Confirmed', 'Thank you! Your confirmation has been recorded.')
       } else {
         const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
-        setError(errorData.details || errorData.message || 'Failed to confirm visit')
+        const errorMessage = errorData.details || errorData.message || 'Failed to confirm visit'
+        toast.error('Validation Error', errorMessage, 8000)
       }
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Failed to confirm visit')
+      toast.error('Error', err instanceof Error ? err.message : 'Failed to confirm visit')
     } finally {
       setConfirming(false)
     }
@@ -76,8 +78,9 @@ export default function ConfirmVisitPage() {
     return (
       <main style={{ maxWidth: 600, margin: '60px auto' }}>
         <div className="card" style={{ borderColor: 'var(--danger)' }}>
-          <p style={{ color: 'var(--danger)', margin: 0 }}>❌ {error}</p>
+          <p style={{ color: 'var(--danger)', margin: 0 }}>❌ Visit not found or already confirmed</p>
         </div>
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
       </main>
     )
   }
@@ -165,10 +168,10 @@ export default function ConfirmVisitPage() {
           <button type="submit" disabled={confirming} style={{ width: '100%' }}>
             {confirming ? 'Confirming...' : 'Confirm Visit Completed'}
           </button>
-
-          {error && <p style={{ color: 'var(--danger)', margin: '12px 0 0 0' }}>{error}</p>}
         </form>
       )}
+
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </main>
   )
 }

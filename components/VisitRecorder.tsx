@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useToast, ToastContainer } from './Toast'
 
 export default function VisitRecorder({ id }: { id: string }) {
   const [open, setOpen] = useState(false)
@@ -10,7 +11,7 @@ export default function VisitRecorder({ id }: { id: string }) {
   const [document, setDocument] = useState<File | null>(null)
   const [documentPreview, setDocumentPreview] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { toasts, toast, removeToast } = useToast()
 
   function handleDocumentChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -23,7 +24,6 @@ export default function VisitRecorder({ id }: { id: string }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
 
     const body = new FormData()
     body.append('actual_start_time', startTime)
@@ -40,14 +40,16 @@ export default function VisitRecorder({ id }: { id: string }) {
       })
 
       if (res.ok) {
-        window.location.reload()
+        toast.success('Visit Recorded', 'The site visit has been recorded successfully.')
+        setTimeout(() => window.location.reload(), 1500)
       } else {
         const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
-        setError(errorData.details || errorData.message || 'Failed to save visit record')
+        const errorMessage = errorData.details || errorData.message || 'Failed to save visit record'
+        toast.error('Validation Error', errorMessage, 8000)
       }
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Failed to save visit record')
+      toast.error('Error', err instanceof Error ? err.message : 'Failed to save visit record')
     } finally {
       setLoading(false)
     }
@@ -115,10 +117,10 @@ export default function VisitRecorder({ id }: { id: string }) {
           <button type="submit" disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Saving...' : 'Save Visit Record'}
           </button>
-
-          {error && <p style={{ color: 'var(--danger)', margin: '8px 0 0 0' }}>{error}</p>}
         </form>
       )}
+
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   )
 }
