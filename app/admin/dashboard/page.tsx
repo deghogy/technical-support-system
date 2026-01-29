@@ -58,7 +58,7 @@ export default async function DashboardPage() {
   const totalHours = conductedByLocationArray.reduce((sum, item) => sum + item.hours, 0)
 
   return (
-    <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px' }}>
+    <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
       {/* Page Header */}
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>

@@ -43,11 +43,17 @@ export default function VisitRejector({ id }: { id: string }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="nav-button"
         style={{
-          background: 'transparent',
-          color: 'var(--danger)',
-          border: '1px solid rgba(220, 38, 38, 0.3)',
+          background: open ? '#64748B' : '#FEF2F2',
+          color: open ? '#FFFFFF' : '#DC2626',
+          border: '1px solid #FECACA',
+          padding: '10px 16px',
+          borderRadius: '6px',
+          fontSize: '14px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          width: '100%',
+          transition: 'all 0.15s ease',
         }}
       >
         {open ? 'Cancel' : 'Reject Visit'}

@@ -87,347 +87,337 @@ export default function HistoryPage() {
 
   const getStatusBadge = (r: any) => {
     if (r.status === 'rejected') {
-      return { label: '❌ Rejected', color: '#ef4444' }
+      return { label: 'Rejected', color: '#DC2626', bg: '#FEF2F2' }
     }
     if (r.visit_status === 'confirmed') {
-      return { label: '✅ Confirmed', color: 'var(--accent)' }
+      return { label: 'Completed', color: '#0077C8', bg: '#EAF3FB' }
     }
     if (r.scheduled_date && r.status === 'approved') {
-      return { label: '📅 Scheduled', color: '#3b82f6' }
+      return { label: 'Scheduled', color: '#3B82F6', bg: '#EFF6FF' }
     }
     if (r.status === 'approved') {
-      return { label: '✓ Approved', color: '#8b5cf6' }
+      return { label: 'Approved', color: '#22C55E', bg: '#F0FDF4' }
     }
-    return { label: r.status || 'Pending', color: 'var(--muted)' }
+    return { label: 'Pending', color: '#64748B', bg: '#F1F5F9' }
   }
 
+  const isRemote = (location: string) => location?.includes('Automation - Boccard Indonesia')
+
   return (
-    <main style={{ maxWidth: 900, margin: '40px auto' }}>
-      <h1>Request History</h1>
+    <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
+      {/* Page Header */}
+      <div style={{ marginBottom: '28px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>
+          Request History
+        </h1>
+        <p style={{ fontSize: '15px', color: '#64748B', margin: 0 }}>
+          View and search all site visit requests
+        </p>
+      </div>
 
       {/* Search Bar */}
-      <div style={{ marginBottom: 20 }}>
-        <input
-          type="text"
-          placeholder="Search by name, email, location, or visit ID..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            backgroundColor: 'var(--card)',
-            border: '1px solid rgba(255,255,255,0.04)',
-            borderRadius: '6px',
-            color: 'var(--text)',
-            fontSize: '14px',
-          }}
-        />
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ position: 'relative' }}>
+          <span style={{
+            position: 'absolute',
+            left: '14px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: '#94A3B8',
+            fontSize: '16px',
+          }}>
+            🔍
+          </span>
+          <input
+            type="text"
+            placeholder="Search by name, email, location, or visit ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 16px 12px 44px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D0D7E2',
+              borderRadius: '8px',
+              color: '#0F172A',
+              fontSize: '14px',
+            }}
+          />
+        </div>
       </div>
 
       {/* Filter Buttons */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        <button
-          onClick={() => setFilter('all')}
-          style={{
-            background: filter === 'all' ? 'var(--accent)' : 'transparent',
-            color: filter === 'all' ? '#fff' : 'var(--muted)',
-            border: filter === 'all' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 500,
-          }}
-        >
-          All ({requests.length})
-        </button>
-        <button
-          onClick={() => setFilter('approved')}
-          style={{
-            background: filter === 'approved' ? 'var(--accent)' : 'transparent',
-            color: filter === 'approved' ? '#fff' : 'var(--muted)',
-            border: filter === 'approved' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 500,
-          }}
-        >
-          Approved ({requests.filter(r => r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed').length})
-        </button>
-        <button
-          onClick={() => setFilter('scheduled')}
-          style={{
-            background: filter === 'scheduled' ? 'var(--accent)' : 'transparent',
-            color: filter === 'scheduled' ? '#fff' : 'var(--muted)',
-            border: filter === 'scheduled' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 500,
-          }}
-        >
-          Scheduled ({requests.filter(r => r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed').length})
-        </button>
-        <button
-          onClick={() => setFilter('confirmed')}
-          style={{
-            background: filter === 'confirmed' ? 'var(--accent)' : 'transparent',
-            color: filter === 'confirmed' ? '#fff' : 'var(--muted)',
-            border: filter === 'confirmed' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 500,
-          }}
-        >
-          Confirmed ({requests.filter(r => r.visit_status === 'confirmed').length})
-        </button>
-        <button
-          onClick={() => setFilter('rejected')}
-          style={{
-            background: filter === 'rejected' ? 'var(--accent)' : 'transparent',
-            color: filter === 'rejected' ? '#fff' : 'var(--muted)',
-            border: filter === 'rejected' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 500,
-          }}
-        >
-          Rejected ({requests.filter(r => r.status === 'rejected').length})
-        </button>
+      <div style={{
+        display: 'flex',
+        gap: 8,
+        marginBottom: 20,
+        flexWrap: 'wrap',
+        padding: '12px',
+        background: '#F8FAFC',
+        borderRadius: '8px',
+        border: '1px solid #E2E8F0',
+      }}>
+        {[
+          { key: 'all', label: 'All', count: requests.length },
+          { key: 'approved', label: 'Approved', count: requests.filter(r => r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed').length },
+          { key: 'scheduled', label: 'Scheduled', count: requests.filter(r => r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed').length },
+          { key: 'confirmed', label: 'Completed', count: requests.filter(r => r.visit_status === 'confirmed').length },
+          { key: 'rejected', label: 'Rejected', count: requests.filter(r => r.status === 'rejected').length },
+        ].map((item) => (
+          <button
+            key={item.key}
+            onClick={() => setFilter(item.key as any)}
+            style={{
+              background: filter === item.key ? '#0077C8' : '#FFFFFF',
+              color: filter === item.key ? '#FFFFFF' : '#475569',
+              border: `1px solid ${filter === item.key ? '#0077C8' : '#D0D7E2'}`,
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            {item.label}
+            <span style={{
+              background: filter === item.key ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
+              color: filter === item.key ? '#FFFFFF' : '#64748B',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              fontSize: '12px',
+            }}>
+              {item.count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* Sort Options */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
-        <label style={{ color: 'var(--muted)', fontSize: '14px', fontWeight: 500 }}>Sort by:</label>
-        <button
-          onClick={() => setSortBy('newest')}
-          style={{
-            background: sortBy === 'newest' ? 'var(--accent)' : 'transparent',
-            color: sortBy === 'newest' ? '#fff' : 'var(--muted)',
-            border: sortBy === 'newest' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '6px 12px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '13px',
-          }}
-        >
-          Newest
-        </button>
-        <button
-          onClick={() => setSortBy('oldest')}
-          style={{
-            background: sortBy === 'oldest' ? 'var(--accent)' : 'transparent',
-            color: sortBy === 'oldest' ? '#fff' : 'var(--muted)',
-            border: sortBy === 'oldest' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '6px 12px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '13px',
-          }}
-        >
-          Oldest
-        </button>
-        <button
-          onClick={() => setSortBy('location')}
-          style={{
-            background: sortBy === 'location' ? 'var(--accent)' : 'transparent',
-            color: sortBy === 'location' ? '#fff' : 'var(--muted)',
-            border: sortBy === 'location' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '6px 12px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '13px',
-          }}
-        >
-          Location
-        </button>
-        <button
-          onClick={() => setSortBy('status')}
-          style={{
-            background: sortBy === 'status' ? 'var(--accent)' : 'transparent',
-            color: sortBy === 'status' ? '#fff' : 'var(--muted)',
-            border: sortBy === 'status' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-            padding: '6px 12px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '13px',
-          }}
-        >
-          Status
-        </button>
+        <span style={{ color: '#64748B', fontSize: '14px', fontWeight: 500 }}>Sort by:</span>
+        {(['newest', 'oldest', 'location', 'status'] as SortOption[]).map((option) => (
+          <button
+            key={option}
+            onClick={() => setSortBy(option)}
+            style={{
+              background: sortBy === option ? '#0077C8' : 'transparent',
+              color: sortBy === option ? '#FFFFFF' : '#64748B',
+              border: `1px solid ${sortBy === option ? '#0077C8' : '#D0D7E2'}`,
+              padding: '6px 14px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: sortBy === option ? 500 : 400,
+              textTransform: 'capitalize',
+            }}
+          >
+            {option}
+          </button>
+        ))}
       </div>
 
       {loading ? (
-        <p style={{ color: 'var(--muted)' }}>Loading history...</p>
+        <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+          <p style={{ color: '#64748B', margin: 0 }}>Loading history...</p>
+        </div>
       ) : sortedRequests.length === 0 ? (
-        <p style={{ color: 'var(--muted)' }}>No requests found for this filter</p>
+        <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>📋</div>
+          <p style={{ color: '#64748B', margin: '0 0 8px 0', fontSize: '15px' }}>
+            No requests found
+          </p>
+          <p style={{ color: '#94A3B8', margin: 0, fontSize: '13px' }}>
+            Try adjusting your filters
+          </p>
+        </div>
       ) : (
-        sortedRequests.map(r => {
-          const statusBadge = getStatusBadge(r)
-          const isExpanded = expandedId === r.id
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {sortedRequests.map(r => {
+            const statusBadge = getStatusBadge(r)
+            const isExpanded = expandedId === r.id
 
-          return (
-            <div
-              key={r.id}
-              className="card"
-              style={{
-                cursor: 'pointer',
-                marginBottom: 16,
-                transition: 'all 0.2s ease',
-                borderLeft: `4px solid ${statusBadge.color}`,
-              }}
-              onClick={() => setExpandedId(isExpanded ? null : r.id)}
-            >
-              {/* Header Section - Always Visible */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: isExpanded ? 12 : 0 }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, marginBottom: 4 }}>
-                    <b>{r.requester_name}</b>
-                    <span style={{ color: 'var(--muted)', fontSize: '12px', marginLeft: 8 }}>
-                      ({r.requester_email})
-                    </span>
-                  </p>
-                  <p style={{ margin: 0, color: 'var(--muted)', fontSize: '13px' }}>📍 {r.site_location}</p>
-                </div>
-                <div style={{ textAlign: 'right', marginLeft: 16 }}>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      padding: '4px 12px',
-                      backgroundColor: `${statusBadge.color}20`,
-                      color: statusBadge.color,
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {statusBadge.label}
-                  </span>
-                </div>
-              </div>
-
-              {/* Expanded Details */}
-              {isExpanded && (
-                <div style={{
-                  marginTop: 16,
-                  paddingTop: 12,
-                  borderTop: '1px solid rgba(255,255,255,0.04)',
-                }}>
-                  {/* Request ID & Date */}
-                  <div style={{ marginBottom: 12 }}>
-                    <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Visit ID</p>
-                    <code style={{
-                      background: 'var(--card)',
-                      padding: '6px 10px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      color: 'var(--text)',
-                    }}>
-                      {r.id}
-                    </code>
-                    <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
-                      Requested: {formatDateGMT7(r.created_at)}
+            return (
+              <div
+                key={r.id}
+                className="card"
+                style={{
+                  cursor: 'pointer',
+                  padding: '20px',
+                  transition: 'all 0.2s ease',
+                  borderLeft: `4px solid ${statusBadge.color}`,
+                  background: isExpanded ? '#FAFBFC' : '#FFFFFF',
+                }}
+                onClick={() => setExpandedId(isExpanded ? null : r.id)}
+              >
+                {/* Header Section - Always Visible */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: '16px' }}>{isRemote(r.site_location) ? '💻' : '📍'}</span>
+                      <span style={{ fontWeight: 600, fontSize: '15px', color: '#0F172A' }}>
+                        {r.requester_name}
+                      </span>
+                      <span style={{ color: '#64748B', fontSize: '13px' }}>
+                        ({r.requester_email})
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, color: '#64748B', fontSize: '14px' }}>
+                      {r.site_location}
                     </p>
                   </div>
-
-                  {/* Problem Description */}
-                  {r.problem_desc && (
-                    <div style={{ marginBottom: 12 }}>
-                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Problem</p>
-                      <p style={{ margin: 0, fontSize: '13px', color: 'var(--text)', lineHeight: 1.4 }}>
-                        {r.problem_desc}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Estimated Hours */}
-                  {r.estimated_hours && (
-                    <div style={{ marginBottom: 12 }}>
-                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Estimated Duration</p>
-                      <p style={{ margin: 0, fontSize: '13px', color: 'var(--text)' }}>
-                        {r.estimated_hours} hour{r.estimated_hours !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Timeline Section */}
-                  <div style={{
-                    backgroundColor: 'var(--card)',
-                    padding: 12,
-                    borderRadius: '4px',
-                    marginBottom: 12,
-                  }}>
-                    <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: 'var(--muted)' }}>Timeline</p>
-
-                    {r.approved_at && (
-                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
-                        ✓ Approved: {formatDateGMT7(r.approved_at)}
-                      </p>
-                    )}
-
-                    {r.scheduled_date && (
-                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
-                        📅 Scheduled: {formatDateOnlyGMT7(r.scheduled_date)}
-                      </p>
-                    )}
-
-                    {r.actual_start_time && (
-                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
-                        🕐 Started: {formatDateGMT7(r.actual_start_time)}
-                      </p>
-                    )}
-
-                    {r.actual_end_time && (
-                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
-                        🕑 Ended: {formatDateGMT7(r.actual_end_time)}
-                      </p>
-                    )}
-
-                    {r.customer_confirmed_at && (
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--accent)' }}>
-                        ✓ Customer confirmed: {formatDateGMT7(r.customer_confirmed_at)}
-                      </p>
-                    )}
+                  <div style={{ textAlign: 'right' }}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: '6px 12px',
+                        backgroundColor: statusBadge.bg,
+                        color: statusBadge.color,
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {statusBadge.label}
+                    </span>
                   </div>
+                </div>
 
-                  {/* Rejection Reason (if rejected) */}
-                  {r.rejection_reason && (
-                    <div style={{
-                      backgroundColor: '#ef444420',
-                      padding: 12,
-                      borderRadius: '4px',
-                      borderLeft: '3px solid #ef4444',
-                    }}>
-                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', fontWeight: 600, color: '#ef4444' }}>Rejection Reason</p>
-                      <p style={{ margin: 0, fontSize: '13px', color: 'var(--text)', lineHeight: 1.4 }}>
-                        {r.rejection_reason}
+                {/* Expanded Details */}
+                {isExpanded && (
+                  <div style={{
+                    marginTop: 16,
+                    paddingTop: 16,
+                    borderTop: '1px solid #E2E8F0',
+                  }}>
+                    {/* Request ID & Date */}
+                    <div style={{ marginBottom: 12 }}>
+                      <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#64748B', fontWeight: 500 }}>Visit ID</p>
+                      <code style={{
+                        background: '#F1F5F9',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        color: '#0F172A',
+                        border: '1px solid #E2E8F0',
+                        fontFamily: 'monospace',
+                      }}>
+                        {r.id}
+                      </code>
+                      <p style={{ margin: '10px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                        Requested: {formatDateGMT7(r.created_at)}
                       </p>
                     </div>
-                  )}
 
-                  {/* Expand Indicator */}
-                  <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
-                    ▲ Click to collapse
-                  </p>
-                </div>
-              )}
+                    {/* Problem Description */}
+                    {r.problem_desc && (
+                      <div style={{ marginBottom: 12 }}>
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#64748B', fontWeight: 500 }}>Problem</p>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.5 }}>
+                          {r.problem_desc}
+                        </p>
+                      </div>
+                    )}
 
-              {/* Collapse Indicator */}
-              {!isExpanded && (
-                <p style={{ margin: '0', fontSize: '12px', color: 'var(--muted)', marginTop: 8, textAlign: 'center' }}>
-                  ▼ Click to expand details
-                </p>
-              )}
-            </div>
-          )
-        })
+                    {/* Timeline Section */}
+                    <div style={{
+                      background: '#F8FAFC',
+                      padding: 16,
+                      borderRadius: '8px',
+                      marginBottom: 12,
+                      border: '1px solid #E2E8F0',
+                    }}>
+                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>Timeline</p>
+
+                      {r.approved_at && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#22C55E' }}>✓</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Approved: {formatDateGMT7(r.approved_at)}
+                          </span>
+                        </div>
+                      )}
+
+                      {r.scheduled_date && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#0077C8' }}>📅</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Scheduled: {formatDateOnlyGMT7(r.scheduled_date)}
+                          </span>
+                        </div>
+                      )}
+
+                      {r.actual_start_time && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#0077C8' }}>🕐</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Started: {formatDateGMT7(r.actual_start_time)}
+                          </span>
+                        </div>
+                      )}
+
+                      {r.actual_end_time && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#0077C8' }}>🕑</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Ended: {formatDateGMT7(r.actual_end_time)}
+                          </span>
+                        </div>
+                      )}
+
+                      {r.customer_confirmed_at && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ color: '#0077C8' }}>✓</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Customer confirmed: {formatDateGMT7(r.customer_confirmed_at)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Rejection Reason (if rejected) */}
+                    {r.rejection_reason && (
+                      <div style={{
+                        background: '#FEF2F2',
+                        padding: 12,
+                        borderRadius: '6px',
+                        borderLeft: '3px solid #DC2626',
+                      }}>
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', fontWeight: 600, color: '#DC2626' }}>Rejection Reason</p>
+                        <p style={{ margin: 0, fontSize: '13px', color: '#475569', lineHeight: 1.4 }}>
+                          {r.rejection_reason}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Collapse Indicator */}
+                    <p style={{ margin: '16px 0 0 0', fontSize: '13px', color: '#94A3B8', textAlign: 'center' }}>
+                      ▲ Click to collapse
+                    </p>
+                  </div>
+                )}
+
+                {/* Collapse Indicator */}
+                {!isExpanded && (
+                  <div style={{
+                    marginTop: 12,
+                    padding: '8px',
+                    background: '#F8FAFC',
+                    borderRadius: '6px',
+                    textAlign: 'center',
+                  }}
+                  >
+                    <span style={{ fontSize: '13px', color: '#64748B' }}>
+                      Click to expand details ▼
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
     </main>
   )

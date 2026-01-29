@@ -60,7 +60,18 @@ export default function VisitRecorder({ id }: { id: string }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="nav-button"
+        style={{
+          background: open ? '#64748B' : '#0077C8',
+          color: '#FFFFFF',
+          border: 'none',
+          padding: '10px 16px',
+          borderRadius: '6px',
+          fontSize: '14px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          width: '100%',
+          transition: 'all 0.15s ease',
+        }}
       >
         {open ? 'Cancel' : 'Record Visit'}
       </button>

@@ -8,10 +8,10 @@ export default function QRCode({ url }: { url: string }) {
       <img
         src={qrCodeUrl}
         alt="QR Code"
-        style={{ width: '200px', height: '200px', border: '2px solid var(--muted)' }}
+        style={{ width: '100px', height: '100px', borderRadius: '8px', border: '1px solid #E2E8F0' }}
       />
-      <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '8px 0 0 0' }}>
-        Scan to confirm visit
+      <p style={{ fontSize: '11px', color: '#64748B', margin: '6px 0 0 0' }}>
+        Scan to confirm
       </p>
     </div>
   )

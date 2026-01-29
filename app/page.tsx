@@ -13,8 +13,19 @@ export default function Home() {
   const [savedEmails, setSavedEmails] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [supportType, setSupportType] = useState<'remote' | 'onsite'>('onsite')
+  const [location, setLocation] = useState('')
   const emailInputRef = useRef<HTMLInputElement>(null)
+  const locationInputRef = useRef<HTMLInputElement>(null)
   const { toasts, toast, removeToast } = useToast()
+
+  // Clear location when switching from remote to onsite
+  useEffect(() => {
+    if (supportType === 'onsite') {
+      setLocation('')
+    } else {
+      setLocation('Automation - Boccard Indonesia')
+    }
+  }, [supportType])
 
   // Load saved emails from localStorage on mount
   useEffect(() => {
@@ -99,7 +110,7 @@ export default function Home() {
         body: JSON.stringify({
           requester_name: formData.get('name'),
           requester_email: email,
-          site_location: supportType === 'remote' ? 'Automation - Boccard Indonesia' : formData.get('location'),
+          site_location: location,
           problem_desc: formData.get('problem'),
           requested_date: formData.get('date'),
           estimated_hours: 0, // Not collected from form - actual hours used for billing
@@ -129,8 +140,8 @@ export default function Home() {
   }
 
   return (
-    <main className="container-sm" style={{ paddingTop: '40px', paddingBottom: '60px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '48px', alignItems: 'flex-start' }}>
+    <main className="container-sm" style={{ paddingTop: '40px', paddingBottom: '60px', maxWidth: '1000px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 0.85fr', gap: '40px', alignItems: 'flex-start' }}>
         {/* Left Column - Form */}
         <div>
           <div style={{ marginBottom: '24px' }}>
@@ -353,7 +364,7 @@ export default function Home() {
                   {supportType === 'remote' ? (
                     <input
                       name="location"
-                      value="Automation - Boccard Indonesia"
+                      value={location}
                       readOnly
                       style={{
                         background: '#F1F5F9',
@@ -363,7 +374,10 @@ export default function Home() {
                     />
                   ) : (
                     <input
+                      ref={locationInputRef}
                       name="location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
                       placeholder="Enter site location"
                       required
                     />

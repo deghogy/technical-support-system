@@ -75,29 +75,72 @@ export default function QuotasPageClient() {
 
 
   return (
-    <main style={{ maxWidth: 1000, margin: '40px auto', padding: '0 20px' }}>
-      <h1>Customer Hour Quotas</h1>
+    <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
+      {/* Page Header */}
+      <div style={{ marginBottom: '28px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>
+          Customer Hour Quotas
+        </h1>
+        <p style={{ fontSize: '15px', color: '#64748B', margin: 0 }}>
+          Manage customer support hour allocations
+        </p>
+      </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
         <button
           onClick={() => setTab('quotas')}
           style={{
-            background: tab === 'quotas' ? 'var(--accent)' : 'transparent',
-            color: tab === 'quotas' ? '#fff' : 'var(--muted)',
-            border: tab === 'quotas' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+            background: tab === 'quotas' ? '#0077C8' : '#FFFFFF',
+            color: tab === 'quotas' ? '#FFFFFF' : '#475569',
+            border: `1px solid ${tab === 'quotas' ? '#0077C8' : '#D0D7E2'}`,
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
           }}
         >
-          Quotas ({quotas.length})
+          Quotas
+          <span style={{
+            background: tab === 'quotas' ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
+            color: tab === 'quotas' ? '#FFFFFF' : '#64748B',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            fontSize: '12px',
+          }}>
+            {quotas.length}
+          </span>
         </button>
         <button
           onClick={() => setTab('logs')}
           style={{
-            background: tab === 'logs' ? 'var(--accent)' : 'transparent',
-            color: tab === 'logs' ? '#fff' : 'var(--muted)',
-            border: tab === 'logs' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+            background: tab === 'logs' ? '#0077C8' : '#FFFFFF',
+            color: tab === 'logs' ? '#FFFFFF' : '#475569',
+            border: `1px solid ${tab === 'logs' ? '#0077C8' : '#D0D7E2'}`,
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
           }}
         >
-          Usage History ({logs.length})
+          Usage History
+          <span style={{
+            background: tab === 'logs' ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
+            color: tab === 'logs' ? '#FFFFFF' : '#64748B',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            fontSize: '12px',
+          }}>
+            {logs.length}
+          </span>
         </button>
       </div>
 
@@ -105,62 +148,113 @@ export default function QuotasPageClient() {
         <div>
           <button
             onClick={() => setShowForm(!showForm)}
-            style={{ marginBottom: 20 }}
+            style={{
+              background: '#0077C8',
+              color: '#FFFFFF',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              marginBottom: 20,
+            }}
           >
             {showForm ? 'Cancel' : '+ Add/Edit Quota'}
           </button>
 
           {showForm && (
-            <form onSubmit={handleSaveQuota} className="card" style={{ marginBottom: 20 }}>
-              <input
-                type="email"
-                placeholder="Customer email"
-                value={formEmail}
-                onChange={(e) => setFormEmail(e.target.value)}
-                required
-              />
-              <input
-                type="number"
-                placeholder="Total hours"
-                value={formHours}
-                onChange={(e) => setFormHours(e.target.value)}
-                min="0"
-                required
-              />
-              <button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : 'Save Quota'}
-              </button>
-              {message && <p>{message}</p>}
+            <form onSubmit={handleSaveQuota} className="card" style={{ marginBottom: 20, padding: '20px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                  Customer Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="customer@company.com"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  required
+                  style={{ marginBottom: 0 }}
+                />
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A', marginBottom: '6px' }}>
+                  Total Hours
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g., 40"
+                  value={formHours}
+                  onChange={(e) => setFormHours(e.target.value)}
+                  min="0"
+                  required
+                  style={{ marginBottom: 0, maxWidth: '200px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <button type="submit" disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Quota'}
+                </button>
+                {message && (
+                  <span style={{
+                    fontSize: '14px',
+                    color: message.includes('✓') ? '#22C55E' : '#DC2626',
+                  }}>
+                    {message}
+                  </span>
+                )}
+              </div>
             </form>
           )}
 
           {loading ? (
-            <p style={{ color: 'var(--muted)' }}>Loading quotas...</p>
+            <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+              <p style={{ color: '#64748B', margin: 0 }}>Loading quotas...</p>
+            </div>
           ) : quotas.length === 0 ? (
-            <p style={{ color: 'var(--muted)' }}>No quotas configured yet</p>
+            <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>⏱️</div>
+              <p style={{ color: '#64748B', margin: '0 0 8px 0', fontSize: '15px' }}>
+                No quotas configured yet
+              </p>
+              <p style={{ color: '#94A3B8', margin: 0, fontSize: '13px' }}>
+                Add your first customer quota to get started
+              </p>
+            </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: '#FFFFFF', borderRadius: '8px', overflow: 'hidden' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <th style={{ textAlign: 'left', padding: '12px', fontSize: '14px' }}>Customer Email</th>
-                    <th style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>Total Hours</th>
-                    <th style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>Used Hours</th>
-                    <th style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>Available</th>
-                    <th style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>Usage %</th>
+                  <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                    <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Customer Email</th>
+                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Total Hours</th>
+                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Used Hours</th>
+                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Available</th>
+                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Usage %</th>
                   </tr>
                 </thead>
                 <tbody>
                   {quotas.map((quota) => (
-                    <tr key={quota.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '12px', fontSize: '14px' }}>{quota.customerEmail}</td>
-                      <td style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>{quota.totalHours}h</td>
-                      <td style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>{quota.usedHours}h</td>
-                      <td style={{ textAlign: 'center', padding: '12px', fontSize: '14px', color: quota.availableHours === 0 ? 'var(--danger)' : 'var(--accent)' }}>
+                    <tr key={quota.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <td style={{ padding: '16px', fontSize: '14px', color: '#0F172A' }}>{quota.customerEmail}</td>
+                      <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0077C8' }}>{quota.totalHours}h</td>
+                      <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px', color: '#475569' }}>{quota.usedHours}h</td>
+                      <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: quota.availableHours === 0 ? '#DC2626' : '#22C55E' }}>
                         {quota.availableHours}h
                       </td>
-                      <td style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>
-                        {quota.totalHours === 0 ? '–' : Math.round((quota.usedHours / quota.totalHours) * 100)}%
+                      <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px' }}>
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          background: quota.totalHours === 0 ? '#F1F5F9' : (quota.usedHours / quota.totalHours) > 0.8 ? '#FEF2F2' : (quota.usedHours / quota.totalHours) > 0.5 ? '#FFFBEB' : '#F0FDF4',
+                          color: quota.totalHours === 0 ? '#64748B' : (quota.usedHours / quota.totalHours) > 0.8 ? '#DC2626' : (quota.usedHours / quota.totalHours) > 0.5 ? '#F59E0B' : '#22C55E',
+                        }}>
+                          {quota.totalHours === 0 ? '–' : Math.round((quota.usedHours / quota.totalHours) * 100) + '%'}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -174,27 +268,37 @@ export default function QuotasPageClient() {
       {tab === 'logs' && (
         <div>
           {loading ? (
-            <p style={{ color: 'var(--muted)' }}>Loading history...</p>
+            <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+              <p style={{ color: '#64748B', margin: 0 }}>Loading history...</p>
+            </div>
           ) : logs.length === 0 ? (
-            <p style={{ color: 'var(--muted)' }}>No quota usage history</p>
+            <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>📊</div>
+              <p style={{ color: '#64748B', margin: '0 0 8px 0', fontSize: '15px' }}>
+                No quota usage history
+              </p>
+              <p style={{ color: '#94A3B8', margin: 0, fontSize: '13px' }}>
+                Usage will be recorded when visits are confirmed
+              </p>
+            </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: '#FFFFFF', borderRadius: '8px', overflow: 'hidden' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <th style={{ textAlign: 'left', padding: '12px', fontSize: '14px' }}>Customer Email</th>
-                    <th style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>Hours Deducted</th>
-                    <th style={{ textAlign: 'left', padding: '12px', fontSize: '14px' }}>Reason</th>
-                    <th style={{ textAlign: 'right', padding: '12px', fontSize: '14px' }}>Date</th>
+                  <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                    <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Customer Email</th>
+                    <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Hours Deducted</th>
+                    <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Reason</th>
+                    <th style={{ textAlign: 'right', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.map((log) => (
-                    <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: '12px', fontSize: '14px' }}>{log.customerEmail}</td>
-                      <td style={{ textAlign: 'center', padding: '12px', fontSize: '14px' }}>{log.hoursDeducted}h</td>
-                      <td style={{ padding: '12px', fontSize: '14px', color: 'var(--muted)' }}>{log.reason}</td>
-                      <td style={{ textAlign: 'right', padding: '12px', fontSize: '14px', color: 'var(--muted)' }}>
+                    <tr key={log.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <td style={{ padding: '16px', fontSize: '14px', color: '#0F172A' }}>{log.customerEmail}</td>
+                      <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#DC2626' }}>-{log.hoursDeducted}h</td>
+                      <td style={{ padding: '16px', fontSize: '14px', color: '#475569' }}>{log.reason}</td>
+                      <td style={{ textAlign: 'right', padding: '16px', fontSize: '14px', color: '#64748B' }}>
                         {new Date(log.createdAt).toLocaleDateString()}
                       </td>
                     </tr>

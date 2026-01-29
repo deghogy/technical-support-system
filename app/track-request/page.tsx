@@ -12,10 +12,10 @@ function QRCode({ url }: { url: string }) {
       <img
         src={qrCodeUrl}
         alt="QR Code"
-        style={{ width: '120px', height: '120px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}
+        style={{ width: '100px', height: '100px', borderRadius: '8px', border: '1px solid #E2E8F0' }}
       />
-      <p style={{ fontSize: '11px', color: 'var(--muted)', margin: '6px 0 0 0' }}>
-        Scan to access
+      <p style={{ fontSize: '11px', color: '#64748B', margin: '6px 0 0 0' }}>
+        Scan to confirm
       </p>
     </div>
   )
@@ -69,18 +69,25 @@ export default function TrackRequestPage() {
   }
 
   const getStatusColor = (status: string, visitStatus: string) => {
-    if (visitStatus === 'confirmed') return 'var(--accent)'
-    if (status === 'rejected') return '#ef4444'
-    if (status === 'approved') return '#8b5cf6'
-    return 'var(--muted)'
+    if (visitStatus === 'confirmed') return '#0077C8'
+    if (status === 'rejected') return '#DC2626'
+    if (status === 'approved') return '#22C55E'
+    return '#F59E0B'
+  }
+
+  const getStatusBgColor = (status: string, visitStatus: string) => {
+    if (visitStatus === 'confirmed') return '#EAF3FB'
+    if (status === 'rejected') return '#FEF2F2'
+    if (status === 'approved') return '#F0FDF4'
+    return '#FFFBEB'
   }
 
   const getStatusLabel = (status: string, visitStatus: string) => {
-    if (visitStatus === 'confirmed') return '✅ Completed & Confirmed'
-    if (visitStatus === 'visit-completed') return '⏳ Awaiting Your Confirmation'
-    if (status === 'rejected') return '❌ Rejected'
-    if (status === 'approved') return '✓ Approved'
-    return '⏳ Pending Review'
+    if (visitStatus === 'confirmed') return 'Completed'
+    if (visitStatus === 'visit-completed') return 'Awaiting Confirmation'
+    if (status === 'rejected') return 'Rejected'
+    if (status === 'approved') return 'Approved'
+    return 'Pending'
   }
 
   // Sort requests
@@ -106,152 +113,133 @@ export default function TrackRequestPage() {
     return 0
   })
 
+  // Calculate used percentage correctly
+  const usedPercentage = quota && quota.totalHours > 0
+    ? Math.round((quota.usedHours / quota.totalHours) * 100)
+    : 0
+
   return (
-    <main style={{ maxWidth: 700, margin: '60px auto', padding: '0 20px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <h1>Track Your Site Visit Request</h1>
-        <p style={{ color: 'var(--muted)', margin: '8px 0 0 0' }}>
-          Enter your email address to check the status of your request
+    <main style={{ maxWidth: 900, margin: '40px auto', padding: '0 24px' }}>
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>
+          Track Your Request
+        </h1>
+        <p style={{ color: '#64748B', margin: 0, fontSize: '15px' }}>
+          Enter your email to check request status
         </p>
       </div>
 
-      <form onSubmit={handleSearch} className="card request-form">
-        <input
-          type="email"
-          placeholder="Your email address"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-          style={{ marginBottom: '12px' }}
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Searching...' : 'Track Request'}
-        </button>
+      <form onSubmit={handleSearch} className="card" style={{ padding: '20px', marginBottom: 24 }}>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <input
+            type="email"
+            placeholder="your.email@company.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            style={{ flex: 1, marginBottom: 0 }}
+          />
+          <button type="submit" disabled={loading} style={{ whiteSpace: 'nowrap' }}>
+            {loading ? 'Searching...' : 'Track Request'}
+          </button>
+        </div>
       </form>
 
-
+      {/* Quota Display */}
       {searched && quota && (
-        <div className="card" style={{ marginBottom: 20, background: 'var(--card)' }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--muted)' }}>
-            <b>Your Hour Quota:</b>
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{
-                background: 'rgba(30, 144, 255, 0.1)',
-                height: '24px',
-                borderRadius: '4px',
-                overflow: 'hidden',
-                position: 'relative',
-              }}>
-                <div style={{
-                  background: 'var(--accent)',
-                  height: '100%',
-                  width: `${quota.totalHours === 0 ? 0 : (quota.usedHours / quota.totalHours) * 100}%`,
-                  transition: 'width 0.3s ease',
-                }} />
-                <span style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: quota.usedHours / quota.totalHours > 0.5 ? '#fff' : 'var(--text)',
-                  textShadow: quota.usedHours / quota.totalHours > 0.5 ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
-                }}>
-                  {Math.round((quota.usedHours / quota.totalHours) * 100)}% used
-                </span>
-              </div>
-            </div>
-            <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '80px', textAlign: 'right' }}>
-              {quota.usedHours}/{quota.totalHours}h
+        <div className="card" style={{ marginBottom: 24, padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>
+              Your Quota Usage
+            </span>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: '#0077C8' }}>
+              {quota.usedHours}h / {quota.totalHours}h
             </span>
           </div>
-          <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
-            {quota.totalHours === 0 
-              ? '⚠️ No quota allocated'
-              : `${quota.usedHours}h used, ${quota.availableHours}h available`
-            }
-          </p>
+          <div style={{
+            background: '#E2E8F0',
+            height: '12px',
+            borderRadius: '6px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              background: usedPercentage > 80 ? '#DC2626' : usedPercentage > 50 ? '#F59E0B' : '#0077C8',
+              height: '100%',
+              width: `${usedPercentage}%`,
+              transition: 'width 0.3s ease',
+              borderRadius: '6px',
+            }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+            <span style={{ fontSize: '12px', color: '#64748B' }}>
+              {usedPercentage}% used
+            </span>
+            <span style={{ fontSize: '12px', color: '#64748B' }}>
+              {quota.availableHours}h available
+            </span>
+          </div>
         </div>
       )}
 
       {/* Sort Options */}
       {requests.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center', flexWrap: 'wrap' }}>
-          <label style={{ color: 'var(--muted)', fontSize: '14px', fontWeight: 500 }}>Sort by:</label>
-          <button
-            onClick={() => setSortBy('newest')}
-            style={{
-              background: sortBy === 'newest' ? 'var(--accent)' : 'transparent',
-              color: sortBy === 'newest' ? '#fff' : 'var(--muted)',
-              border: sortBy === 'newest' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            Newest
-          </button>
-          <button
-            onClick={() => setSortBy('oldest')}
-            style={{
-              background: sortBy === 'oldest' ? 'var(--accent)' : 'transparent',
-              color: sortBy === 'oldest' ? '#fff' : 'var(--muted)',
-              border: sortBy === 'oldest' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            Oldest
-          </button>
-          <button
-            onClick={() => setSortBy('location')}
-            style={{
-              background: sortBy === 'location' ? 'var(--accent)' : 'transparent',
-              color: sortBy === 'location' ? '#fff' : 'var(--muted)',
-              border: sortBy === 'location' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            Location
-          </button>
-          <button
-            onClick={() => setSortBy('status')}
-            style={{
-              background: sortBy === 'status' ? 'var(--accent)' : 'transparent',
-              color: sortBy === 'status' ? '#fff' : 'var(--muted)',
-              border: sortBy === 'status' ? 'none' : '1px solid rgba(255,255,255,0.04)',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            Status
-          </button>
+        <div style={{
+          display: 'flex',
+          gap: 8,
+          marginBottom: 20,
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          padding: '12px 16px',
+          background: '#F8FAFC',
+          borderRadius: '8px',
+          border: '1px solid #E2E8F0'
+        }}>
+          <span style={{ color: '#64748B', fontSize: '13px', fontWeight: 600 }}>Sort by:</span>
+          {(['newest', 'oldest', 'location', 'status'] as SortOption[]).map((option) => (
+            <button
+              key={option}
+              onClick={() => setSortBy(option)}
+              style={{
+                background: sortBy === option ? '#0077C8' : '#FFFFFF',
+                color: sortBy === option ? '#FFFFFF' : '#475569',
+                border: `1px solid ${sortBy === option ? '#0077C8' : '#D0D7E2'}`,
+                padding: '6px 14px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: sortBy === option ? 500 : 400,
+                textTransform: 'capitalize',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {option}
+            </button>
+          ))}
         </div>
       )}
 
-      {searched && requests.length === 0 && (
-        <div className="card" style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--muted)', margin: 0 }}>No requests found for this email address</p>
+      {/* No Results */}
+      {searched && !loading && requests.length === 0 && (
+        <div className="card" style={{ textAlign: 'center', padding: '40px 24px' }}>
+          <div style={{ fontSize: '48px', marginBottom: 12 }}>🔍</div>
+          <p style={{ color: '#64748B', margin: '0 0 8px 0', fontSize: '15px' }}>
+            No requests found
+          </p>
+          <p style={{ color: '#94A3B8', margin: 0, fontSize: '13px' }}>
+            Try a different email address
+          </p>
         </div>
       )}
 
+      {/* Request Cards */}
       {requests.length > 0 && (
-        <div style={{ marginTop: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {sortedRequests.map((req) => {
             const isExpanded = expandedId === req.id
             const statusColor = getStatusColor(req.status, req.visit_status)
+            const statusBg = getStatusBgColor(req.status, req.visit_status)
             const statusLabel = getStatusLabel(req.status, req.visit_status)
+            const isRemote = req.site_location?.includes('Automation - Boccard Indonesia')
 
             return (
               <div
@@ -259,126 +247,172 @@ export default function TrackRequestPage() {
                 className="card"
                 style={{
                   cursor: 'pointer',
-                  marginBottom: 16,
+                  padding: '20px',
                   transition: 'all 0.2s ease',
                   borderLeft: `4px solid ${statusColor}`,
+                  background: isExpanded ? '#FAFBFC' : '#FFFFFF',
                 }}
                 onClick={() => setExpandedId(isExpanded ? null : req.id)}
               >
-                {/* Header Section - Always Visible */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: isExpanded ? 12 : 0 }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, marginBottom: 4 }}>
-                      <b>📍 {req.site_location}</b>
-                    </p>
-                    <p style={{ margin: 0, color: 'var(--muted)', fontSize: '13px', lineHeight: 1.4 }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: '16px' }}>{isRemote ? '💻' : '📍'}</span>
+                      <span style={{
+                        fontWeight: 600,
+                        fontSize: '15px',
+                        color: '#0F172A',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {req.site_location}
+                      </span>
+                    </div>
+                    <p style={{
+                      margin: 0,
+                      color: '#64748B',
+                      fontSize: '14px',
+                      lineHeight: 1.5,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}>
                       {req.problem_desc}
                     </p>
                   </div>
-                  <div style={{ textAlign: 'right', marginLeft: 16 }}>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        padding: '4px 12px',
-                        backgroundColor: `${statusColor}20`,
-                        color: statusColor,
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {statusLabel}
-                    </span>
-                  </div>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '6px 12px',
+                      backgroundColor: statusBg,
+                      color: statusColor,
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {statusLabel}
+                  </span>
                 </div>
 
-                {/* Expanded Details */}
+                {/* Expanded Content */}
                 {isExpanded && (
-                  <div style={{
-                    marginTop: 16,
-                    paddingTop: 12,
-                    borderTop: '1px solid rgba(255,255,255,0.04)',
-                  }}>
-                    {/* Visit ID with QR Code */}
+                  <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #E2E8F0' }}>
+                    {/* ID and QR */}
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: req.visit_status === 'visit-completed' ? '1fr auto' : '1fr',
                       gap: '16px',
-                      alignItems: 'start',
-                      marginBottom: 12,
-                      background: 'var(--card)',
-                      padding: '12px',
-                      borderRadius: '4px',
+                      marginBottom: 16,
                     }}>
                       <div>
-                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--muted)' }}>Visit ID</p>
+                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: '#64748B', fontWeight: 500 }}>
+                          Request ID
+                        </p>
                         <code style={{
-                          background: 'var(--card)',
-                          padding: '6px 10px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          color: 'var(--text)',
-                          border: '1px solid rgba(255,255,255,0.1)',
+                          background: '#F1F5F9',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          color: '#0F172A',
+                          border: '1px solid #E2E8F0',
+                          fontFamily: 'monospace',
+                          display: 'inline-block'
                         }}>
                           {req.id}
                         </code>
-                        <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: 'var(--muted)' }}>
-                          Requested: {formatDateOnlyGMT7(req.requested_date)}
-                        </p>                      </div>
+                        <p style={{ margin: '10px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                          📅 Requested: {formatDateOnlyGMT7(req.requested_date)}
+                        </p>
+                        {req.support_type && (
+                          <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+                            {req.support_type === 'remote' ? '💻 Remote Support' : '📍 Direct Visit'}
+                          </p>
+                        )}
+                      </div>
 
-                      {/* QR Code for visit confirmation */}
                       {req.visit_status === 'visit-completed' && (
                         <QRCode url={`${typeof window !== 'undefined' ? window.location.origin : ''}/confirm-visit/${req.id}`} />
                       )}
                     </div>
 
-                    {/* Timeline Section */}
+                    {/* Timeline */}
                     <div style={{
-                      backgroundColor: 'var(--card)',
-                      padding: 12,
-                      borderRadius: '4px',
-                      marginBottom: 12,
+                      background: '#F8FAFC',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      marginBottom: 16,
+                      border: '1px solid #E2E8F0'
                     }}>
-                      <p style={{ margin: '0 0 8px 0', fontSize: '12px', fontWeight: 600, color: 'var(--muted)' }}>Timeline</p>
+                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                        Timeline
+                      </p>
 
                       {req.approved_at && (
-                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
-                          ✓ Approved: {formatDateGMT7(req.approved_at)}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#22C55E' }}>✓</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Approved on {formatDateGMT7(req.approved_at)}
+                          </span>
+                        </div>
                       )}
 
                       {req.scheduled_date && (
-                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
-                          📅 Scheduled: {formatDateOnlyGMT7(req.scheduled_date)} ({req.duration_hours}h)
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#0077C8' }}>📅</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Scheduled for {formatDateOnlyGMT7(req.scheduled_date)} ({req.duration_hours}h)
+                          </span>
+                        </div>
                       )}
 
                       {req.actual_start_time && (
-                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
-                          🕐 Started: {formatDateGMT7(req.actual_start_time)}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#0077C8' }}>🕐</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Started at {formatDateGMT7(req.actual_start_time)}
+                          </span>
+                        </div>
                       )}
 
                       {req.actual_end_time && (
-                        <p style={{ margin: '0 0 6px 0', fontSize: '12px', color: 'var(--text)' }}>
-                          🕑 Ended: {formatDateGMT7(req.actual_end_time)}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#0077C8' }}>🕑</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Ended at {formatDateGMT7(req.actual_end_time)}
+                          </span>
+                        </div>
                       )}
 
                       {req.customer_confirmed_at && (
-                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--accent)' }}>
-                          ✓ Confirmed: {formatDateGMT7(req.customer_confirmed_at)}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ color: '#0077C8' }}>✓</span>
+                          <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Confirmed on {formatDateGMT7(req.customer_confirmed_at)}
+                          </span>
+                        </div>
                       )}
                     </div>
 
                     {/* Technician Notes */}
                     {req.technician_notes && (
-                      <div style={{ marginBottom: 12, padding: '12px', background: 'rgba(30, 144, 255, 0.05)', borderRadius: '4px', borderLeft: '3px solid var(--accent)' }}>
-                        <p style={{ margin: '0 0 6px 0', color: 'var(--accent)', fontWeight: 600, fontSize: '12px' }}>
+                      <div style={{
+                        marginBottom: 16,
+                        padding: '16px',
+                        background: '#EAF3FB',
+                        borderRadius: '8px',
+                        borderLeft: '3px solid #0077C8'
+                      }}>
+                        <p style={{ margin: '0 0 8px 0', color: '#0077C8', fontWeight: 600, fontSize: '13px' }}>
                           📝 Technician Notes
                         </p>
-                        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text)', lineHeight: 1.4 }}>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
                           {req.technician_notes}
                         </p>
                       </div>
@@ -387,62 +421,54 @@ export default function TrackRequestPage() {
                     {/* Confirmation CTA */}
                     {req.visit_status === 'visit-completed' && !req.customer_confirmed_at && (
                       <div style={{
-                        marginBottom: 12,
-                        padding: '12px',
-                        background: 'rgba(30, 144, 255, 0.1)',
-                        borderRadius: '4px',
-                        border: '1px solid rgba(30, 144, 255, 0.2)',
+                        padding: '16px',
+                        background: '#F0FDF4',
+                        borderRadius: '8px',
+                        border: '1px solid #86EFAC',
+                        textAlign: 'center'
                       }}>
-                        <p style={{ margin: '0 0 8px 0', color: 'var(--accent)', fontWeight: 600, fontSize: '12px' }}>
+                        <p style={{ margin: '0 0 12px 0', color: '#166534', fontWeight: 600, fontSize: '14px' }}>
                           ⏳ Awaiting Your Confirmation
                         </p>
-                        <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'var(--muted)' }}>
-                          The technician has completed the visit. Please confirm that the work was done to your satisfaction.
+                        <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#475569' }}>
+                          The technician has completed the visit. Please confirm the work.
                         </p>
                         <a
                           href={`/confirm-visit/${req.id}`}
                           style={{
                             display: 'inline-block',
-                            background: 'var(--accent)',
+                            background: '#0077C8',
                             color: '#fff',
-                            padding: '8px 16px',
+                            padding: '10px 24px',
                             borderRadius: '6px',
                             textDecoration: 'none',
                             fontWeight: 600,
-                            fontSize: '12px',
+                            fontSize: '14px',
                           }}
                         >
-                          Confirm Visit Completion
+                          Confirm Completion
                         </a>
                       </div>
                     )}
 
-                    {/* Expand Indicator */}
-                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
+                    {/* Collapse Hint */}
+                    <p style={{ margin: '16px 0 0 0', fontSize: '13px', color: '#94A3B8', textAlign: 'center' }}>
                       ▲ Click to collapse
                     </p>
                   </div>
                 )}
 
-                {/* Collapse Indicator */}
+                {/* Expand Hint */}
                 {!isExpanded && (
                   <div style={{
-                    marginTop: 12,
-                    padding: '8px 16px',
-                    background: 'rgba(255,255,255,0.03)',
+                    marginTop: 16,
+                    padding: '10px',
+                    background: '#F8FAFC',
                     borderRadius: '6px',
-                    border: '1px solid rgba(255,255,255,0.06)',
                     textAlign: 'center',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                  }}
-                  >
-                    <span style={{ fontSize: '10px', color: 'var(--muted)' }}>▼</span>
-                    <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 500 }}>
-                      Click to expand details
+                  }}>
+                    <span style={{ fontSize: '13px', color: '#64748B' }}>
+                      Click to expand details ▼
                     </span>
                   </div>
                 )}
