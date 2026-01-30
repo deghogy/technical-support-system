@@ -80,23 +80,43 @@ export default async function DashboardPage() {
         {/* Pending - Amber/Warning */}
         <div className="card" style={{
           padding: '20px',
-          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-          border: '1px solid #FDE68A',
-          borderLeft: '4px solid #F59E0B',
+          background: pending && pending > 0
+            ? 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)'
+            : 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
+          border: `1px solid ${pending && pending > 0 ? '#FDE68A' : '#BBF7D0'}`,
+          borderLeft: `4px solid ${pending && pending > 0 ? '#F59E0B' : '#22C55E'}`,
         }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+          <p style={{
+            fontSize: '12px',
+            fontWeight: 600,
+            color: pending && pending > 0 ? '#92400E' : '#166534',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            margin: '0 0 10px 0'
+          }}>
             Pending Requests
           </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, color: pending && pending > 0 ? '#D97706' : '#78350F', margin: 0 }}>
-            {pending ?? 0}
-          </p>
-          {pending && pending > 0 && (
-            <Link
-              href="/admin/approvals"
-              style={{ fontSize: '13px', color: '#D97706', textDecoration: 'none', marginTop: '8px', display: 'inline-block', fontWeight: 500 }}
-            >
-              Review →
-            </Link>
+          {pending && pending > 0 ? (
+            <>
+              <p style={{ fontSize: '32px', fontWeight: 700, color: '#D97706', margin: 0 }}>
+                {pending}
+              </p>
+              <Link
+                href="/admin/approvals"
+                style={{ fontSize: '13px', color: '#D97706', textDecoration: 'none', marginTop: '8px', display: 'inline-block', fontWeight: 500 }}
+              >
+                Review →
+              </Link>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: '24px', fontWeight: 700, color: '#16A34A', margin: 0 }}>
+                ✓ All Caught Up
+              </p>
+              <p style={{ fontSize: '13px', color: '#22C55E', margin: '8px 0 0 0' }}>
+                No pending requests
+              </p>
+            </>
           )}
         </div>
 
