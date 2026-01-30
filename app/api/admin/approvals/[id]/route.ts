@@ -1,13 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createSupabaseRouteClient } from '@/lib/supabaseRoute'
-import { sendScheduleConfirmationEmail } from '@/lib/emailService'
+import { sendScheduleConfirmationEmail, getAdminEmails } from '@/lib/emailService'
 import { approvalSchema } from '@/lib/schemas'
 import logger from '@/lib/logger'
 import { requireRole } from '@/lib/middleware'
 import { getTimezone } from '@/lib/timezone'
 import { getBaseUrl } from '@/lib/env'
-
-const FALLBACK_ADMIN_EMAIL = process.env.FALLBACK_ADMIN_EMAIL || 'suboccardindonesia@gmail.com'
 
 export async function POST(
   request: NextRequest,
@@ -98,7 +96,7 @@ export async function POST(
     // Quota will be deducted when the technician records actual visit hours.
     // The duration_hours field is kept for scheduling reference only.
 
-    // Send email to customer if approved and scheduled
+    // Send email to all admins if approved and scheduled
     if (validatedData.status === 'approved' && validatedData.scheduled_date) {
       try {
         const timezone = getTimezone()
@@ -111,8 +109,10 @@ export async function POST(
           timeZone: timezone,
         })
 
+        // Get all admin emails and notify them
+        const adminEmails = await getAdminEmails()
         await sendScheduleConfirmationEmail({
-          adminEmail: user.email || FALLBACK_ADMIN_EMAIL,
+          adminEmails,
           requesterName: requestData.requester_name,
           siteLocation: requestData.site_location,
           scheduledDate: formattedDate,

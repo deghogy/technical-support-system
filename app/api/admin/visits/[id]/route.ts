@@ -1,12 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createSupabaseRouteClient } from '@/lib/supabaseRoute'
-import { sendVisitCompletionEmail } from '@/lib/emailService'
+import { sendVisitCompletionEmail, getAdminEmails } from '@/lib/emailService'
 import { visitRecordingSchema } from '@/lib/schemas'
 import logger from '@/lib/logger'
 import { requireRole } from '@/lib/middleware'
 import { getBaseUrl } from '@/lib/env'
-
-const FALLBACK_ADMIN_EMAIL = process.env.FALLBACK_ADMIN_EMAIL || 'suboccardindonesia@gmail.com'
 
 export async function POST(
   request: NextRequest,
@@ -207,12 +205,13 @@ export async function POST(
       // Don't fail the visit recording if quota deduction fails - we still want to record the visit
     }
 
-    // Send completion email to customer only if already approved by admin
+    // Send completion email to all admins only if already approved by admin
     try {
       if (requestData.status === 'approved') {
         const confirmationLink = `${getBaseUrl()}/confirm-visit/${id}`
+        const adminEmails = await getAdminEmails()
         await sendVisitCompletionEmail({
-          adminEmail: user.email || FALLBACK_ADMIN_EMAIL,
+          adminEmails,
           requesterName: requestData.requester_name,
           siteLocation: requestData.site_location,
           confirmationLink,

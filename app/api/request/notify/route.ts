@@ -1,27 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createSupabaseRouteClient } from '@/lib/supabaseRoute'
-import { sendApprovalNotificationEmail } from '@/lib/emailService'
+import { sendApprovalNotificationEmail, getAdminEmails } from '@/lib/emailService'
 import logger from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { requestId, adminEmails } = body
+    const { requestId } = body
 
-    if (!requestId || !Array.isArray(adminEmails) || adminEmails.length === 0) {
-      logger.warn({ requestId, adminEmailCount: adminEmails?.length }, 'Invalid notification request')
+    if (!requestId) {
+      logger.warn({ requestId }, 'Invalid notification request - missing requestId')
       return NextResponse.json(
-        { message: 'Invalid request data', errors: ['requestId and non-empty adminEmails array are required'] },
+        { message: 'Invalid request data', errors: ['requestId is required'] },
         { status: 400 }
       )
-    }
-
-    // Validate email format
-    const validEmails = adminEmails.filter(
-      (email: any) => typeof email === 'string' && email.includes('@')
-    )
-    if (validEmails.length !== adminEmails.length) {
-      logger.warn({ requestId, total: adminEmails.length, valid: validEmails.length }, 'Some invalid email addresses provided')
     }
 
     let supabase
@@ -43,33 +35,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Request not found' }, { status: 404 })
     }
 
-    // Send to all admin emails in parallel
-    const emailPromises = validEmails.map((email: string) =>
-      sendApprovalNotificationEmail({
-        adminEmail: email,
-        requesterName: requestData.requester_name,
-        requesterEmail: requestData.requester_email,
-        siteLocation: requestData.site_location,
-        problemDesc: requestData.problem_desc,
-        requestedDate: new Date(requestData.requested_date).toLocaleDateString(),
-        estimatedHours: requestData.estimated_hours,
-        requestId,
-      }).catch(err => {
-        logger.error({ error: err, email, requestId }, 'Failed to send email to admin')
-        // Continue even if one email fails
-        return null
-      })
-    )
+    // Get all admin emails and send notification
+    const adminEmails = await getAdminEmails()
 
-    const results = await Promise.all(emailPromises)
-    const successCount = results.filter(r => r !== null).length
+    const result = await sendApprovalNotificationEmail({
+      adminEmails,
+      requesterName: requestData.requester_name,
+      requesterEmail: requestData.requester_email,
+      siteLocation: requestData.site_location,
+      problemDesc: requestData.problem_desc,
+      requestedDate: new Date(requestData.requested_date).toLocaleDateString(),
+      estimatedHours: requestData.estimated_hours,
+      requestId,
+    })
 
     logger.info(
-      { requestId, totalEmails: validEmails.length, successCount },
+      { requestId, totalEmails: result.totalCount, successCount: result.successCount },
       'Notification emails processed'
     )
 
-    return NextResponse.json({ success: true, successCount, totalEmails: validEmails.length })
+    return NextResponse.json({ success: true, successCount: result.successCount, totalEmails: result.totalCount })
   } catch (error) {
     logger.error({ error }, 'Unexpected error in notification route')
     return NextResponse.json(

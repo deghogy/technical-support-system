@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     logger.info({ email }, 'Sending test notification email')
 
     await sendApprovalNotificationEmail({
-      adminEmail: email,
+      adminEmails: [email],
       requesterName: 'Test User',
       requesterEmail: 'test-requester@example.com',
       siteLocation: 'Test Location - Jakarta HQ',
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     logger.info({ email }, 'Sending test notification email via POST')
 
     await sendApprovalNotificationEmail({
-      adminEmail: email,
+      adminEmails: [email],
       requesterName: 'Test User',
       requesterEmail: 'test-requester@example.com',
       siteLocation: 'Test Location - Jakarta HQ',
