@@ -22,6 +22,7 @@ function QRCode({ url }: { url: string }) {
 }
 
 type SortOption = 'newest' | 'oldest' | 'location' | 'status'
+type FilterOption = 'all' | 'pending' | 'approved' | 'scheduled' | 'completed' | 'rejected'
 
 export default function TrackRequestPage() {
   const [email, setEmail] = useState('')
@@ -29,6 +30,7 @@ export default function TrackRequestPage() {
   const [quota, setQuota] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [filter, setFilter] = useState<FilterOption>('all')
   const [sortBy, setSortBy] = useState<SortOption>('newest')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const { toasts, toast, removeToast } = useToast()
@@ -90,8 +92,19 @@ export default function TrackRequestPage() {
     return 'Pending'
   }
 
+  // Filter requests
+  const filteredRequests = requests.filter((r) => {
+    if (filter === 'all') return true
+    if (filter === 'pending') return r.status === 'pending'
+    if (filter === 'approved') return r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed'
+    if (filter === 'scheduled') return r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed'
+    if (filter === 'completed') return r.visit_status === 'confirmed'
+    if (filter === 'rejected') return r.status === 'rejected'
+    return true
+  })
+
   // Sort requests
-  const sortedRequests = [...requests].sort((a, b) => {
+  const sortedRequests = [...filteredRequests].sort((a, b) => {
     if (sortBy === 'newest') {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     } else if (sortBy === 'oldest') {
@@ -178,6 +191,61 @@ export default function TrackRequestPage() {
               {quota.availableHours}h available
             </span>
           </div>
+        </div>
+      )}
+
+      {/* Filter Options */}
+      {requests.length > 0 && (
+        <div style={{
+          display: 'flex',
+          gap: 8,
+          marginBottom: 12,
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          padding: '12px 16px',
+          background: '#F8FAFC',
+          borderRadius: '8px',
+          border: '1px solid #E2E8F0'
+        }}>
+          <span style={{ color: '#64748B', fontSize: '13px', fontWeight: 600 }}>Filter:</span>
+          {([
+            { key: 'all', label: 'All', count: requests.length },
+            { key: 'pending', label: 'Pending', count: requests.filter(r => r.status === 'pending').length },
+            { key: 'approved', label: 'Approved', count: requests.filter(r => r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed').length },
+            { key: 'scheduled', label: 'Scheduled', count: requests.filter(r => r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed').length },
+            { key: 'completed', label: 'Completed', count: requests.filter(r => r.visit_status === 'confirmed').length },
+            { key: 'rejected', label: 'Rejected', count: requests.filter(r => r.status === 'rejected').length },
+          ] as { key: FilterOption; label: string; count: number }[]).map((item) => (
+            <button
+              key={item.key}
+              onClick={() => setFilter(item.key)}
+              style={{
+                background: filter === item.key ? '#0077C8' : '#FFFFFF',
+                color: filter === item.key ? '#FFFFFF' : '#475569',
+                border: `1px solid ${filter === item.key ? '#0077C8' : '#D0D7E2'}`,
+                padding: '6px 12px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: filter === item.key ? 500 : 400,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {item.label}
+              <span style={{
+                background: filter === item.key ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
+                color: filter === item.key ? '#FFFFFF' : '#64748B',
+                padding: '2px 6px',
+                borderRadius: '10px',
+                fontSize: '11px',
+              }}>
+                {item.count}
+              </span>
+            </button>
+          ))}
         </div>
       )}
 

@@ -183,7 +183,7 @@ export default function VisitsPage() {
                           flexWrap: 'wrap',
                         }}>
                           <span style={{ fontSize: '13px', color: '#475569' }}>
-                            📅 <strong>{formatDateOnlyGMT7(visit.scheduled_date)}</strong>
+                            📅 <strong>{formatDateGMT7(visit.scheduled_date)}</strong>
                           </span>
                         </div>
 
