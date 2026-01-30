@@ -110,11 +110,11 @@ export default async function DashboardPage() {
             </>
           ) : (
             <>
-              <p style={{ fontSize: '24px', fontWeight: 700, color: '#16A34A', margin: 0 }}>
-                ✓ All Good, sir
+              <p style={{ fontSize: '32px', fontWeight: 700, color: '#16A34A', margin: 0 }}>
+                ✓
               </p>
               <p style={{ fontSize: '13px', color: '#22C55E', margin: '8px 0 0 0' }}>
-                No pending requests
+                All Good, sir
               </p>
             </>
           )}
