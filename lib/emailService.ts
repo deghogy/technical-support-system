@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 import ApprovalNotificationEmail from '@/components/ApprovalNotificationEmail'
 import logger from './logger'
 import { createSupabaseRouteClient } from './supabaseRoute'
+import { getBaseUrl } from './env'
 
 // Fallback email for admin notifications if no admins exist
 const FALLBACK_ADMIN_EMAIL = process.env.FALLBACK_ADMIN_EMAIL || 'suboccardindonesia@gmail.com'
@@ -69,7 +70,7 @@ export async function sendApprovalNotificationEmail({
   estimatedHours: number
   requestId: string
 }) {
-  const approvalLink = `${process.env.NEXT_PUBLIC_BASE_URL}/admin/approvals`
+  const approvalLink = `${getBaseUrl()}/admin/approvals`
 
   try {
     const resend = getResendClient()
