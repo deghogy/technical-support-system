@@ -50,14 +50,13 @@ export type CreateSiteVisitRequest = z.infer<typeof createSiteVisitRequestSchema
  */
 export const approvalSchema = z.object({
   status: z.enum(['approved', 'rejected']),
-  scheduled_date: z.string().optional(),
-  duration_hours: z.coerce.number().int().min(1).max(24).optional(),
+  scheduled_date: z.string().optional().nullable(),
+  duration_hours: z.coerce.number().int().min(1).max(24).optional().nullable(),
 }).refine(
   (data) => {
-    // If approving with scheduling, only scheduled_date is required
-    // duration_hours is optional and will be recorded during actual visit
-    if (data.status === 'approved' && data.scheduled_date) {
-      return data.scheduled_date !== undefined
+    // If approving, scheduled_date is required
+    if (data.status === 'approved') {
+      return data.scheduled_date !== null && data.scheduled_date !== undefined && data.scheduled_date !== ''
     }
     return true
   },

@@ -60,14 +60,14 @@ export default function VisitRejector({ id }: { id: string }) {
       </button>
 
       {open && (
-        <form onSubmit={handleReject} className="card" style={{ marginTop: 8, borderColor: 'var(--danger)' }}>
+        <form onSubmit={handleReject} className="card" style={{ marginTop: 8, border: '1px solid #FECACA' }}>
           <label style={{ display: 'block', marginBottom: 8 }}>
-            <small style={{ color: 'var(--muted)' }}>Reason for rejection (optional)</small>
+            <small style={{ color: '#64748B' }}>Reason for rejection (optional)</small>
             <textarea
               value={reason}
               onChange={e => setReason(e.target.value)}
               placeholder="e.g., Equipment malfunction, Unable to access site..."
-              style={{ display: 'block', marginTop: 4, height: '80px' }}
+              style={{ display: 'block', marginTop: 4, height: '80px', width: '100%', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '6px' }}
             />
           </label>
 
@@ -76,11 +76,15 @@ export default function VisitRejector({ id }: { id: string }) {
             disabled={loading}
             style={{
               width: '100%',
-              background: 'var(--danger)',
+              background: '#DC2626',
               color: 'white',
               border: 'none',
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.7 : 1,
+              padding: '10px 16px',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: 500,
             }}
           >
             {loading ? 'Rejecting...' : 'Confirm Rejection'}
