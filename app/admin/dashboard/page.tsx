@@ -37,17 +37,23 @@ export default async function DashboardPage() {
     .is('actual_start_time', null)
     .order('scheduled_date', { ascending: true })
 
-  // Get conducted hours by site location
-  const { data: conductedByLocation } = await supabase
+  // Get conducted visits with actual times for accurate hours calculation
+  const { data: conductedVisits } = await supabase
     .from('site_visit_requests')
-    .select('site_location, duration_hours')
+    .select('site_location, actual_start_time, actual_end_time, duration_hours')
     .eq('visit_status', 'confirmed')
 
-  // Group and sum hours by location
+  // Calculate actual hours worked and group by location
   const hoursMap = new Map<string, number>()
-  conductedByLocation?.forEach((item: any) => {
+  conductedVisits?.forEach((item: any) => {
     const location = item.site_location || 'Unknown'
-    const hours = item.duration_hours || 0
+    // Use actual hours if available, fall back to planned duration_hours
+    let hours = item.duration_hours || 0
+    if (item.actual_start_time && item.actual_end_time) {
+      const start = new Date(item.actual_start_time).getTime()
+      const end = new Date(item.actual_end_time).getTime()
+      hours = Math.floor((end - start) / (1000 * 60 * 60))
+    }
     hoursMap.set(location, (hoursMap.get(location) || 0) + hours)
   })
 
