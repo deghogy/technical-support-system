@@ -78,7 +78,7 @@ export async function sendApprovalNotificationEmail({
     const emailPromises = adminEmails.map(async (email) => {
       try {
         const result = await resend.emails.send({
-          from: 'onboarding@resend.dev',
+          from: 'support@boccard-tsns.id',
           to: email,
           subject: `Boccard Visit Request - ${siteLocation}`,
           react: ApprovalNotificationEmail({
@@ -146,7 +146,7 @@ export async function sendScheduleConfirmationEmail({
     const emailPromises = adminEmails.map(async (email) => {
       try {
         const result = await resend.emails.send({
-          from: 'onboarding@resend.dev',
+          from: 'support@boccard-tsns.id',
           to: email,
           subject: `Boccard Visit Scheduled - ${siteLocation}`,
           html: `
@@ -218,7 +218,7 @@ export async function sendVisitCompletionEmail({
     const emailPromises = adminEmails.map(async (email) => {
       try {
         const result = await resend.emails.send({
-          from: 'onboarding@resend.dev',
+          from: 'support@boccard-tsns.id',
           to: email,
           subject: `Boccard Visit Completed - ${siteLocation}`,
           html: `

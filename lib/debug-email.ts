@@ -55,7 +55,7 @@ async function debugEmailSetup() {
 
   // Check 3: Email configuration
   console.log('\n3️⃣  Email Configuration:')
-  console.log('   ℹ️  From: onboarding@resend.dev')
+  console.log('   ℹ️  From: support@boccard-tsns.id')
   console.log(`   ℹ️  Fallback admin: ${fallbackEmail}`)
   console.log('   ℹ️  Supported templates:')
   console.log('      - Approval notification (to admins)')
