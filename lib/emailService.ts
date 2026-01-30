@@ -80,7 +80,7 @@ export async function sendApprovalNotificationEmail({
         const result = await resend.emails.send({
           from: 'onboarding@resend.dev',
           to: email,
-          subject: `New Request: ${siteLocation} - Approval Needed`,
+          subject: `Boccard Visit Request - ${siteLocation}`
           react: ApprovalNotificationEmail({
             requesterName,
             requesterEmail,
@@ -148,7 +148,7 @@ export async function sendScheduleConfirmationEmail({
         const result = await resend.emails.send({
           from: 'onboarding@resend.dev',
           to: email,
-          subject: 'Boccard Visit Scheduled - ${siteLocation}',
+          subject: `Boccard Visit Scheduled - ${siteLocation}`
           html: `
             <h2>A Visit Has Been Scheduled</h2>
             <p>Hi Boccard Admin,</p>
@@ -220,7 +220,7 @@ export async function sendVisitCompletionEmail({
         const result = await resend.emails.send({
           from: 'onboarding@resend.dev',
           to: email,
-          subject: 'Boccard Visit Confirmed',
+          subject: `Boccard Visit Completed - ${siteLocation}`
           html: `
             <h2>Site Visit Completed</h2>
             <p>Hi Boccard Admin,</p>
