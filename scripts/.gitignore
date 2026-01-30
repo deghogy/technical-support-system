@@ -1,0 +1,16 @@
+# Environment variables
+.env
+
+# Export files
+exports/
+*.xlsx
+*.xls
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Logs
+*.log
