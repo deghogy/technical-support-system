@@ -2,8 +2,12 @@
 """
 Supabase Database to Excel Exporter
 
-This script connects to Supabase, fetches all data from the site_visit_requests table,
-and exports it to an Excel file with proper formatting.
+This script connects to Supabase, fetches all data from site_visit_requests and customer_quotas tables,
+and exports them to an Excel file with multiple sheets and proper formatting.
+
+Sheets:
+    - Site Visit Requests: All site visit request data
+    - Customer Quotas: Customer quota information with calculated available hours
 
 Usage:
     python export_to_excel.py
@@ -20,7 +24,23 @@ Scheduling (Weekly):
 import os
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional
+
+# Load environment variables from .env file
+def load_env_file():
+    """Load environment variables from .env file if it exists."""
+    env_path = Path(__file__).parent / '.env'
+    if env_path.exists():
+        print(f"Loading environment from: {env_path}")
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key] = value
+        return True
+    return False
 
 try:
     from supabase import create_client
@@ -30,8 +50,11 @@ try:
     from openpyxl.utils.dataframe import dataframe_to_rows
 except ImportError as e:
     print(f"Missing required package: {e}")
-    print("Please install dependencies: pip install supabase pandas openpyxl")
+    print("Please install dependencies: pip install -r requirements.txt")
     sys.exit(1)
+
+# Load .env file before anything else
+load_env_file()
 
 
 def get_supabase_client():
@@ -51,7 +74,7 @@ def get_supabase_client():
 
 def fetch_all_data(supabase) -> list:
     """Fetch all records from site_visit_requests table."""
-    print("Fetching data from Supabase...")
+    print("Fetching site visit requests...")
 
     # Fetch all records (adjust limit if you have more than 10,000)
     response = supabase.table('site_visit_requests').select('*').limit(10000).execute()
@@ -62,6 +85,21 @@ def fetch_all_data(supabase) -> list:
         data = response
 
     print(f"Fetched {len(data)} records")
+    return data
+
+
+def fetch_quotas_data(supabase) -> list:
+    """Fetch all records from customer_quotas table."""
+    print("Fetching customer quotas...")
+
+    response = supabase.table('customer_quotas').select('*').limit(1000).execute()
+
+    if hasattr(response, 'data'):
+        data = response.data
+    else:
+        data = response
+
+    print(f"Fetched {len(data)} quota records")
     return data
 
 
@@ -129,15 +167,10 @@ def format_data_for_excel(data: list) -> pd.DataFrame:
     return df
 
 
-def style_excel_file(filepath: str, df: pd.DataFrame):
-    """Apply styling to the Excel file."""
-    from openpyxl import load_workbook
-
-    wb = load_workbook(filepath)
-    ws = wb.active
-
+def style_worksheet(ws, df: pd.DataFrame, header_color: str = '0077C8'):
+    """Apply styling to a single worksheet."""
     # Define styles
-    header_fill = PatternFill(start_color='0077C8', end_color='0077C8', fill_type='solid')
+    header_fill = PatternFill(start_color=header_color, end_color=header_color, fill_type='solid')
     header_font = Font(color='FFFFFF', bold=True, size=11)
     header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
@@ -178,14 +211,72 @@ def style_excel_file(filepath: str, df: pd.DataFrame):
         for cell in row:
             cell.border = thin_border
 
+
+def style_excel_file(filepath: str, df_requests: pd.DataFrame, df_quotas: pd.DataFrame = None):
+    """Apply styling to the Excel file with multiple sheets."""
+    from openpyxl import load_workbook
+
+    wb = load_workbook(filepath)
+
+    # Style Site Visit Requests sheet
+    ws_requests = wb['Site Visit Requests']
+    style_worksheet(ws_requests, df_requests, header_color='0077C8')
+
+    # Style Customer Quotas sheet if it exists
+    if df_quotas is not None and not df_quotas.empty:
+        ws_quotas = wb['Customer Quotas']
+        style_worksheet(ws_quotas, df_quotas, header_color='22C55E')
+
     wb.save(filepath)
     print(f"Styling applied to {filepath}")
 
 
-def export_to_excel(data: list, output_dir: Optional[str] = None) -> str:
-    """Export data to Excel file with timestamp."""
+def format_quotas_for_excel(data: list) -> pd.DataFrame:
+    """Convert quotas data to a pandas DataFrame with proper formatting."""
     if not data:
-        print("No data to export")
+        return pd.DataFrame()
+
+    df = pd.DataFrame(data)
+
+    # Rename columns to be more readable
+    column_mapping = {
+        'id': 'ID',
+        'customer_email': 'Customer Email',
+        'total_hours': 'Total Hours Quota',
+        'used_hours': 'Used Hours',
+        'created_at': 'Created At',
+        'updated_at': 'Updated At',
+    }
+
+    # Only rename columns that exist
+    existing_columns = {k: v for k, v in column_mapping.items() if k in df.columns}
+    df = df.rename(columns=existing_columns)
+
+    # Calculate available hours
+    if 'Total Hours Quota' in df.columns and 'Used Hours' in df.columns:
+        df['Available Hours'] = df['Total Hours Quota'] - df['Used Hours']
+
+    # Reorder columns
+    preferred_order = [
+        'Customer Email',
+        'Total Hours Quota',
+        'Used Hours',
+        'Available Hours',
+        'Created At',
+        'Updated At',
+    ]
+
+    # Only include columns that exist
+    final_columns = [col for col in preferred_order if col in df.columns]
+    df = df[final_columns]
+
+    return df
+
+
+def export_to_excel(data: list, quotas_data: list, output_dir: Optional[str] = None) -> str:
+    """Export data to Excel file with multiple sheets."""
+    if not data:
+        print("No site visit data to export")
         return ""
 
     # Create output directory if it doesn't exist
@@ -200,14 +291,21 @@ def export_to_excel(data: list, output_dir: Optional[str] = None) -> str:
     filepath = os.path.join(output_dir, filename)
 
     # Format data
-    df = format_data_for_excel(data)
+    df_requests = format_data_for_excel(data)
+    df_quotas = format_quotas_for_excel(quotas_data)
 
-    # Export to Excel
+    # Export to Excel with multiple sheets
     print(f"Exporting to {filepath}...")
-    df.to_excel(filepath, index=False, engine='openpyxl')
+    with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+        # Sheet 1: Site Visit Requests
+        df_requests.to_excel(writer, sheet_name='Site Visit Requests', index=False)
 
-    # Apply styling
-    style_excel_file(filepath, df)
+        # Sheet 2: Customer Quotas
+        if not df_quotas.empty:
+            df_quotas.to_excel(writer, sheet_name='Customer Quotas', index=False)
+
+    # Apply styling to both sheets
+    style_excel_file(filepath, df_requests, df_quotas)
 
     print(f"✓ Export complete: {filepath}")
     return filepath
@@ -253,22 +351,29 @@ def main():
 
         # Fetch data
         data = fetch_all_data(supabase)
+        quotas_data = fetch_quotas_data(supabase)
 
         # Print summary
         print(generate_summary(data))
 
         # Export to Excel
         if data:
-            output_path = export_to_excel(data)
+            output_path = export_to_excel(data, quotas_data)
 
             # Also create a "latest" copy
             if output_path:
                 output_dir = os.path.dirname(output_path)
                 latest_path = os.path.join(output_dir, 'site_visit_requests_latest.xlsx')
 
-                df = format_data_for_excel(data)
-                df.to_excel(latest_path, index=False, engine='openpyxl')
-                style_excel_file(latest_path, df)
+                df_requests = format_data_for_excel(data)
+                df_quotas = format_quotas_for_excel(quotas_data)
+
+                with pd.ExcelWriter(latest_path, engine='openpyxl') as writer:
+                    df_requests.to_excel(writer, sheet_name='Site Visit Requests', index=False)
+                    if not df_quotas.empty:
+                        df_quotas.to_excel(writer, sheet_name='Customer Quotas', index=False)
+
+                style_excel_file(latest_path, df_requests, df_quotas)
                 print(f"✓ Latest copy updated: {latest_path}")
         else:
             print("No records found in the database")

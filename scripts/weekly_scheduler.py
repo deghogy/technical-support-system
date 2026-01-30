@@ -6,10 +6,10 @@ This script runs continuously and executes the export every week.
 Useful for environments where you can't use cron or Task Scheduler.
 
 Usage:
-    python schedule.py
+    python weekly_scheduler.py
 
 To run in background:
-    - Linux/Mac: nohup python schedule.py > scheduler.log 2>&1 &
+    - Linux/Mac: nohup python weekly_scheduler.py > scheduler.log 2>&1 &
     - Windows: Use pythonw.exe or run as service
 """
 
@@ -40,15 +40,23 @@ def run_export():
             text=True
         )
 
+        # Always print stdout (for info messages)
+        if result.stdout:
+            print(result.stdout)
+
         if result.returncode == 0:
             print(f"[{datetime.now()}] Export completed successfully")
-            print(result.stdout)
         else:
-            print(f"[{datetime.now()}] Export failed:")
-            print(result.stderr)
+            print(f"[{datetime.now()}] Export failed (exit code: {result.returncode}):")
+            if result.stderr:
+                print("STDERR:", result.stderr)
+            else:
+                print("No error details available")
 
     except Exception as e:
         print(f"[{datetime.now()}] Error running export: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def main():
