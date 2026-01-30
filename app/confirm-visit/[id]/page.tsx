@@ -5,13 +5,13 @@ import { useParams } from 'next/navigation'
 import { formatDateGMT7 } from '@/lib/dateFormatter'
 import { useToast, ToastContainer } from '@/components/Toast'
 
-// Calculate duration between two dates in hours
+// Calculate duration between two dates in hours (rounded down to favor customer)
 function calculateDurationHours(startTime: string, endTime: string): string {
   const start = new Date(startTime).getTime()
   const end = new Date(endTime).getTime()
   const diffMs = end - start
   const diffHours = diffMs / (1000 * 60 * 60)
-  return diffHours.toFixed(1)
+  return Math.floor(diffHours).toString()
 }
 
 export default function ConfirmVisitPage() {

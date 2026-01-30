@@ -371,7 +371,7 @@ export default function HistoryPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                           <span style={{ color: '#22C55E' }}>⏱</span>
                           <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>
-                            Duration: {((new Date(r.actual_end_time).getTime() - new Date(r.actual_start_time).getTime()) / (1000 * 60 * 60)).toFixed(1)} hours
+                            Duration: {Math.floor((new Date(r.actual_end_time).getTime() - new Date(r.actual_start_time).getTime()) / (1000 * 60 * 60))} hours
                           </span>
                         </div>
                       )}
@@ -398,6 +398,42 @@ export default function HistoryPage() {
                         <p style={{ margin: 0, fontSize: '13px', color: '#475569', lineHeight: 1.4 }}>
                           {r.rejection_reason}
                         </p>
+                      </div>
+                    )}
+
+                    {/* Attached Document (for completed visits) */}
+                    {r.document_url && r.visit_status === 'confirmed' && (
+                      <div style={{
+                        marginTop: 12,
+                        padding: '12px',
+                        background: '#EAF3FB',
+                        borderRadius: '6px',
+                        borderLeft: '3px solid #0077C8',
+                      }}
+003e
+                        <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#0077C8', fontWeight: 600 }}>
+                          📎 Attached Document
+                        </p>
+                        <a
+                          href={r.document_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '8px 16px',
+                            backgroundColor: '#0077C8',
+                            color: '#fff',
+                            textDecoration: 'none',
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          ⬇️ Download Document
+                        </a>
                       </div>
                     )}
 

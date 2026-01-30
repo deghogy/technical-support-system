@@ -394,7 +394,7 @@ export default function TrackRequestPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                           <span style={{ color: '#22C55E' }}>⏱</span>
                           <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>
-                            Duration: {((new Date(req.actual_end_time).getTime() - new Date(req.actual_start_time).getTime()) / (1000 * 60 * 60)).toFixed(1)} hours
+                            Duration: {Math.floor((new Date(req.actual_end_time).getTime() - new Date(req.actual_start_time).getTime()) / (1000 * 60 * 60))} hours
                           </span>
                         </div>
                       )}
@@ -424,6 +424,41 @@ export default function TrackRequestPage() {
                         <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
                           {req.technician_notes}
                         </p>
+                      </div>
+                    )}
+
+                    {/* Attached Document */}
+                    {req.document_url && req.visit_status === 'confirmed' && (
+                      <div style={{
+                        marginBottom: 16,
+                        padding: '16px',
+                        background: '#EAF3FB',
+                        borderRadius: '8px',
+                        borderLeft: '3px solid #0077C8'
+                      }}>
+                        <p style={{ margin: '0 0 12px 0', color: '#0077C8', fontWeight: 600, fontSize: '13px' }}>
+                          📎 Attached Document
+                        </p>
+                        <a
+                          href={req.document_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '10px 20px',
+                            backgroundColor: '#0077C8',
+                            color: '#fff',
+                            textDecoration: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          ⬇️ Download Document
+                        </a>
                       </div>
                     )}
 

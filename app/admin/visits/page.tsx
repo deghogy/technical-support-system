@@ -8,13 +8,13 @@ import QRCode from '@/components/QRCode'
 import { CopyableText } from '@/components/CopyableText'
 import { getBaseUrl } from '@/lib/env'
 
-// Calculate duration between two dates in hours
+// Calculate duration between two dates in hours (rounded down to favor customer)
 function calculateDurationHours(startTime: string, endTime: string): string {
   const start = new Date(startTime).getTime()
   const end = new Date(endTime).getTime()
   const diffMs = end - start
   const diffHours = diffMs / (1000 * 60 * 60)
-  return diffHours.toFixed(1)
+  return Math.floor(diffHours).toString()
 }
 
 function isRemoteVisit(location: string): boolean {
@@ -303,6 +303,41 @@ export default function VisitsPage() {
                             <p style={{ margin: 0, fontSize: '13px', color: '#475569' }}>
                               {visit.technician_notes}
                             </p>
+                          </div>
+                        )}
+
+                        {/* Attached Document */}
+                        {visit.document_url && (
+                          <div style={{
+                            marginBottom: '12px',
+                            padding: '12px',
+                            background: '#EAF3FB',
+                            borderRadius: '6px',
+                            borderLeft: '3px solid #0077C8',
+                          }}>
+                            <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#0077C8', fontWeight: 600 }}>
+                              📎 Attached Document
+                            </p>
+                            <a
+                              href={visit.document_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '8px 16px',
+                                backgroundColor: '#0077C8',
+                                color: '#fff',
+                                textDecoration: 'none',
+                                borderRadius: '4px',
+                                fontSize: '13px',
+                                fontWeight: 500,
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              ⬇️ Download Document
+                            </a>
                           </div>
                         )}
 
