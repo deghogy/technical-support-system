@@ -74,49 +74,40 @@ export async function sendApprovalNotificationEmail({
   try {
     const resend = getResendClient()
 
-    // Send to all admins in parallel
-    const emailPromises = adminEmails.map(async (email) => {
-      try {
-        const result = await resend.emails.send({
-          from: 'support@boccard-tsns.id',
-          to: email,
-          subject: `Boccard Visit Request - ${siteLocation}`,
-          react: ApprovalNotificationEmail({
-            requesterName,
-            requesterEmail,
-            siteLocation,
-            problemDesc,
-            requestedDate,
-            estimatedHours,
-            approvalLink,
-          }) as React.ReactElement,
-        })
-        logger.info(
-          { result: result.data?.id || 'sent', adminEmail: email, requestId },
-          'Approval notification email sent successfully'
-        )
-        return { email, success: true, result }
-      } catch (err) {
-        logger.error(
-          { error: err, adminEmail: email, requestId },
-          'Failed to send approval notification email to admin'
-        )
-        return { email, success: false, error: err }
-      }
-    })
+    // Send to customer as main recipient, admins in CC
+    const ccEmails = adminEmails.filter(email => email !== requesterEmail)
 
-    const results = await Promise.all(emailPromises)
-    const successCount = results.filter(r => r.success).length
-
-    logger.info(
-      { requestId, totalEmails: adminEmails.length, successCount },
-      'All approval notification emails processed'
-    )
-
-    return { successCount, totalCount: adminEmails.length, results }
+    try {
+      const result = await resend.emails.send({
+        from: 'support@boccard-tsns.id',
+        to: requesterEmail,
+        cc: ccEmails.length > 0 ? ccEmails : undefined,
+        subject: `Boccard Visit Request Received - ${siteLocation}`,
+        react: ApprovalNotificationEmail({
+          requesterName,
+          requesterEmail,
+          siteLocation,
+          problemDesc,
+          requestedDate,
+          estimatedHours,
+          approvalLink,
+        }) as React.ReactElement,
+      })
+      logger.info(
+        { result: result.data?.id || 'sent', customerEmail: requesterEmail, ccCount: ccEmails.length, requestId },
+        'Approval notification email sent successfully'
+      )
+      return { successCount: 1, totalCount: 1, results: [{ email: requesterEmail, success: true, result }] }
+    } catch (err) {
+      logger.error(
+        { error: err, customerEmail: requesterEmail, requestId },
+        'Failed to send approval notification email'
+      )
+      return { successCount: 0, totalCount: 1, results: [{ email: requesterEmail, success: false, error: err }] }
+    }
   } catch (error) {
     logger.error(
-      { error, adminEmails, requestId },
+      { error, requestId },
       'Failed to send approval notification emails'
     )
     throw error
@@ -125,6 +116,7 @@ export async function sendApprovalNotificationEmail({
 
 export async function sendScheduleConfirmationEmail({
   adminEmails,
+  requesterEmail,
   requesterName,
   siteLocation,
   scheduledDate,
@@ -132,6 +124,7 @@ export async function sendScheduleConfirmationEmail({
   trackingLink,
 }: {
   adminEmails: string[]
+  requesterEmail: string
   requesterName: string
   siteLocation: string
   scheduledDate: string
@@ -142,58 +135,49 @@ export async function sendScheduleConfirmationEmail({
     const resend = getResendClient()
     const durationText = durationHours ? `<p><strong>Expected Duration:</strong> ${durationHours} hours</p>` : ''
 
-    // Send to all admins in parallel
-    const emailPromises = adminEmails.map(async (email) => {
-      try {
-        const result = await resend.emails.send({
-          from: 'support@boccard-tsns.id',
-          to: email,
-          subject: `Boccard Visit Scheduled - ${siteLocation}`,
-          html: `
-            <h2>A Visit Has Been Scheduled</h2>
-            <p>Hi Boccard Admin,</p>
-            <p>A site visit request has been approved and scheduled!</p>
-            <div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
-              <p><strong>Location:</strong> ${siteLocation}</p>
-              <p><strong>Scheduled Date:</strong> ${scheduledDate}</p>
-              ${durationText}
-            </div>
-            <p>
-              <a href="${trackingLink}" style="background-color: #1e90ff; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold;">
-                Track Your Request
-              </a>
-            </p>
-            <p style="color: #999; font-size: 12px;">
-              This is an automated message from Boccard-ID Technical Support System
-            </p>
-          `,
-        })
-        logger.info(
-          { result: result.data?.id || 'sent', email },
-          'Schedule confirmation email sent'
-        )
-        return { email, success: true, result }
-      } catch (err) {
-        logger.error(
-          { error: err, email },
-          'Failed to send schedule confirmation email to admin'
-        )
-        return { email, success: false, error: err }
-      }
-    })
+    // Send to customer as main recipient, admins in CC
+    const ccEmails = adminEmails.filter(email => email !== requesterEmail)
 
-    const results = await Promise.all(emailPromises)
-    const successCount = results.filter(r => r.success).length
-
-    logger.info(
-      { totalEmails: adminEmails.length, successCount },
-      'All schedule confirmation emails processed'
-    )
-
-    return { successCount, totalCount: adminEmails.length, results }
+    try {
+      const result = await resend.emails.send({
+        from: 'support@boccard-tsns.id',
+        to: requesterEmail,
+        cc: ccEmails.length > 0 ? ccEmails : undefined,
+        subject: `Boccard Visit Scheduled - ${siteLocation}`,
+        html: `
+          <h2>Your Site Visit Has Been Scheduled</h2>
+          <p>Hi ${requesterName},</p>
+          <p>Your site visit request has been approved and scheduled!</p>
+          <div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <p><strong>Location:</strong> ${siteLocation}</p>
+            <p><strong>Scheduled Date:</strong> ${scheduledDate}</p>
+            ${durationText}
+          </div>
+          <p>
+            <a href="${trackingLink}" style="background-color: #1e90ff; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold;">
+              Track Your Request
+            </a>
+          </p>
+          <p style="color: #999; font-size: 12px;">
+            This is an automated message from Boccard-ID Technical Support System
+          </p>
+        `,
+      })
+      logger.info(
+        { result: result.data?.id || 'sent', customerEmail: requesterEmail, ccCount: ccEmails.length },
+        'Schedule confirmation email sent'
+      )
+      return { successCount: 1, totalCount: 1, results: [{ email: requesterEmail, success: true, result }] }
+    } catch (err) {
+      logger.error(
+        { error: err, customerEmail: requesterEmail },
+        'Failed to send schedule confirmation email'
+      )
+      return { successCount: 0, totalCount: 1, results: [{ email: requesterEmail, success: false, error: err }] }
+    }
   } catch (error) {
     logger.error(
-      { error, adminEmails },
+      { error },
       'Failed to send schedule confirmation emails'
     )
     throw error
@@ -202,66 +186,92 @@ export async function sendScheduleConfirmationEmail({
 
 export async function sendVisitCompletionEmail({
   adminEmails,
+  requesterEmail,
   requesterName,
   siteLocation,
   confirmationLink,
+  technicianNotes,
+  customerNotes,
+  documentUrl,
 }: {
   adminEmails: string[]
+  requesterEmail: string
   requesterName: string
   siteLocation: string
   confirmationLink: string
+  technicianNotes?: string | null
+  customerNotes?: string | null
+  documentUrl?: string | null
 }) {
   try {
     const resend = getResendClient()
 
-    // Send to all admins in parallel
-    const emailPromises = adminEmails.map(async (email) => {
-      try {
-        const result = await resend.emails.send({
-          from: 'support@boccard-tsns.id',
-          to: email,
-          subject: `Boccard Visit Completed - ${siteLocation}`,
-          html: `
-            <h2>Site Visit Completed</h2>
-            <p>Hi Boccard Admin,</p>
-            <p>Your scheduled site visit at <strong>${siteLocation}</strong> has been completed by our technician.</p>
-            <p>Please review the visit details and confirm that the work was completed to your satisfaction.</p>
-            <p>
-              <a href="${confirmationLink}" style="background-color: #1e90ff; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold;">
-                Confirm Visit Completion
-              </a>
-            </p>
-            <p style="color: #999; font-size: 12px;">
-              This is an automated message from Boccard-ID Technical Support System
-            </p>
-          `,
-        })
-        logger.info(
-          { result: result.data?.id || 'sent', email },
-          'Visit completion email sent'
-        )
-        return { email, success: true, result }
-      } catch (err) {
-        logger.error(
-          { error: err, email },
-          'Failed to send visit completion email to admin'
-        )
-        return { email, success: false, error: err }
-      }
-    })
+    // Build email body with notes and document
+    const technicianNotesHtml = technicianNotes
+      ? `<div style="background-color: #EAF3FB; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #0077C8;">
+          <p style="margin: 0 0 8px 0; font-weight: bold; color: #0077C8;">📝 Technician Notes:</p>
+          <p style="margin: 0; color: #475569;">${technicianNotes}</p>
+        </div>`
+      : ''
 
-    const results = await Promise.all(emailPromises)
-    const successCount = results.filter(r => r.success).length
+    const customerNotesHtml = customerNotes
+      ? `<div style="background-color: #F0FDF4; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 3px solid #22C55E;">
+          <p style="margin: 0 0 8px 0; font-weight: bold; color: #166534;">💬 Customer Notes:</p>
+          <p style="margin: 0; color: #475569;">${customerNotes}</p>
+        </div>`
+      : ''
 
-    logger.info(
-      { totalEmails: adminEmails.length, successCount },
-      'All visit completion emails processed'
-    )
+    const documentHtml = documentUrl
+      ? `<div style="background-color: #F3F4F6; padding: 12px; border-radius: 6px; margin: 12px 0;">
+          <p style="margin: 0 0 8px 0; font-weight: bold;">📎 Attached Document:</p>
+          <a href="${documentUrl}" style="background-color: #0077C8; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; display: inline-block; font-size: 14px;">
+            Download Document
+          </a>
+        </div>`
+      : ''
 
-    return { successCount, totalCount: adminEmails.length, results }
+    // Send to customer as main recipient, admins in CC
+    const ccEmails = adminEmails.filter(email => email !== requesterEmail)
+
+    try {
+      const result = await resend.emails.send({
+        from: 'support@boccard-tsns.id',
+        to: requesterEmail,
+        cc: ccEmails.length > 0 ? ccEmails : undefined,
+        subject: `Boccard Visit Completed - ${siteLocation}`,
+        html: `
+          <h2>Site Visit Completed</h2>
+          <p>Hi ${requesterName},</p>
+          <p>Your scheduled site visit at <strong>${siteLocation}</strong> has been completed by our technician.</p>
+          ${technicianNotesHtml}
+          ${customerNotesHtml}
+          ${documentHtml}
+          <p>Please review the visit details and confirm that the work was completed to your satisfaction.</p>
+          <p>
+            <a href="${confirmationLink}" style="background-color: #1e90ff; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold;">
+              Confirm Visit Completion
+            </a>
+          </p>
+          <p style="color: #999; font-size: 12px;">
+            This is an automated message from Boccard-ID Technical Support System
+          </p>
+        `,
+      })
+      logger.info(
+        { result: result.data?.id || 'sent', customerEmail: requesterEmail, ccCount: ccEmails.length },
+        'Visit completion email sent'
+      )
+      return { successCount: 1, totalCount: 1, results: [{ email: requesterEmail, success: true, result }] }
+    } catch (err) {
+      logger.error(
+        { error: err, customerEmail: requesterEmail },
+        'Failed to send visit completion email'
+      )
+      return { successCount: 0, totalCount: 1, results: [{ email: requesterEmail, success: false, error: err }] }
+    }
   } catch (error) {
     logger.error(
-      { error, adminEmails },
+      { error },
       'Failed to send visit completion emails'
     )
     throw error

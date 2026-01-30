@@ -109,10 +109,11 @@ export async function POST(
           timeZone: timezone,
         })
 
-        // Get all admin emails and notify them
+        // Send to customer as main recipient, admins in CC
         const adminEmails = await getAdminEmails()
         await sendScheduleConfirmationEmail({
           adminEmails,
+          requesterEmail: requestData.requester_email,
           requesterName: requestData.requester_name,
           siteLocation: requestData.site_location,
           scheduledDate: formattedDate,

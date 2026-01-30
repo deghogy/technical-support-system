@@ -205,19 +205,31 @@ export async function POST(
       // Don't fail the visit recording if quota deduction fails - we still want to record the visit
     }
 
-    // Send completion email to all admins only if already approved by admin
+    // Send completion email to customer with admins in CC
     try {
       if (requestData.status === 'approved') {
         const confirmationLink = `${getBaseUrl()}/confirm-visit/${id}`
         const adminEmails = await getAdminEmails()
+
+        // Fetch customer notes if available
+        const { data: visitData } = await supabase
+          .from('site_visit_requests')
+          .select('customer_notes')
+          .eq('id', id)
+          .single()
+
         await sendVisitCompletionEmail({
           adminEmails,
+          requesterEmail: requestData.requester_email,
           requesterName: requestData.requester_name,
           siteLocation: requestData.site_location,
           confirmationLink,
+          technicianNotes: validatedData.technician_notes,
+          customerNotes: visitData?.customer_notes,
+          documentUrl: updatePayload.document_url,
         })
 
-        logger.info({ id, email: requestData.requester_email }, 'Visit completion email sent')
+        logger.info({ id, email: requestData.requester_email }, 'Visit completion email sent to customer')
       }
     } catch (emailError) {
       logger.error({ error: emailError, id }, 'Failed to send visit completion email')
