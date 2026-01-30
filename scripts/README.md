@@ -56,10 +56,10 @@ crontab -e
 
 ### Option C: Using Python Schedule Library
 
-For a pure Python solution, use `schedule.py` (included) which runs continuously.
+For a pure Python solution, use `weekly_scheduler.py` (included) which runs continuously.
 
 ```bash
-python schedule.py
+python weekly_scheduler.py
 ```
 
 ## Output
