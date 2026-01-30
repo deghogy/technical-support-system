@@ -5,6 +5,15 @@ import { useParams } from 'next/navigation'
 import { formatDateGMT7 } from '@/lib/dateFormatter'
 import { useToast, ToastContainer } from '@/components/Toast'
 
+// Calculate duration between two dates in hours
+function calculateDurationHours(startTime: string, endTime: string): string {
+  const start = new Date(startTime).getTime()
+  const end = new Date(endTime).getTime()
+  const diffMs = end - start
+  const diffHours = diffMs / (1000 * 60 * 60)
+  return diffHours.toFixed(1)
+}
+
 export default function ConfirmVisitPage() {
   const params = useParams()
   const id = params.id as string
@@ -14,14 +23,24 @@ export default function ConfirmVisitPage() {
   const [confirming, setConfirming] = useState(false)
   const [customerNotes, setCustomerNotes] = useState('')
   const [success, setSuccess] = useState(false)
+  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false)
   const { toasts, toast, removeToast } = useToast()
 
   useEffect(() => {
+    // Skip loading if already successfully confirmed
+    if (success) return
+
     async function loadVisit() {
+      // Only show error on first attempt
+      const isFirstAttempt = !hasAttemptedLoad
+      setHasAttemptedLoad(true)
+
       try {
         const res = await fetch(`/api/confirm-visit/${id}`)
         if (!res.ok) {
-          toast.error('Error', 'Visit not found or already confirmed')
+          if (isFirstAttempt) {
+            toast.error('Error', 'Visit not found or already confirmed')
+          }
           setLoading(false)
           return
         }
@@ -30,13 +49,15 @@ export default function ConfirmVisitPage() {
         setLoading(false)
       } catch (err) {
         console.error(err)
-        toast.error('Error', 'Failed to load visit details')
+        if (isFirstAttempt) {
+          toast.error('Error', 'Failed to load visit details')
+        }
         setLoading(false)
       }
     }
 
     loadVisit()
-  }, [id, toast])
+  }, [id, toast, success, hasAttemptedLoad])
 
   async function handleConfirm(e: React.FormEvent) {
     e.preventDefault()
@@ -114,31 +135,37 @@ export default function ConfirmVisitPage() {
         <p style={{ margin: '4px 0', color: 'var(--muted)' }}>
           <b>🕑 End time:</b> {formatDateGMT7(visit.actual_end_time)}
         </p>
+        {visit.actual_start_time && visit.actual_end_time && (
+          <p style={{ margin: '8px 0 0 0', color: '#64748B', fontSize: '14px' }}>
+            <b>⏱ Duration:</b> {calculateDurationHours(visit.actual_start_time, visit.actual_end_time)} hours
+          </p>
+        )}
         {visit.technician_notes && (
-          <p style={{ margin: '8px 0 0 0', padding: '8px', backgroundColor: 'var(--card)', borderRadius: '4px', fontSize: '14px' }}>
+          <p style={{ margin: '8px 0 0 0', padding: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', fontSize: '14px' }}>
             <b>Technician Notes:</b>
             <br />
             {visit.technician_notes}
           </p>
         )}
         {visit.document_url && (
-          <div style={{ margin: '12px 0 0 0', padding: '8px', backgroundColor: 'rgba(30, 144, 255, 0.05)', borderRadius: '4px', borderLeft: '3px solid var(--accent)' }}>
+          <div style={{ margin: '12px 0 0 0', padding: '12px', backgroundColor: '#EAF3FB', borderRadius: '4px', borderLeft: '3px solid #0077C8' }}>
             <p style={{ margin: 0, marginBottom: 8 }}>
               <b>📎 Attached Document</b>
             </p>
-            <a 
-              href={visit.document_url} 
+            <a
+              href={visit.document_url}
               download
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '6px 12px',
-                backgroundColor: 'var(--accent)',
+                padding: '8px 16px',
+                backgroundColor: '#0077C8',
                 color: '#fff',
                 textDecoration: 'none',
                 borderRadius: '4px',
-                fontSize: '14px'
+                fontSize: '14px',
+                fontWeight: 500,
               }}
             >
               ⬇️ Download Document
@@ -148,9 +175,12 @@ export default function ConfirmVisitPage() {
       </div>
 
       {success ? (
-        <div className="card" style={{ borderColor: 'var(--accent)', backgroundColor: 'rgba(30, 144, 255, 0.05)' }}>
-          <p style={{ margin: 0, color: 'var(--accent)' }}>
+        <div className="card" style={{ border: '1px solid #0077C8', backgroundColor: '#EAF3FB' }}>
+          <p style={{ margin: 0, color: '#0077C8' }}>
             ✅ <b>Thank you!</b> Your confirmation has been recorded. The site visit is now complete.
+          </p>
+          <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#64748B' }}>
+            You can close this page now.
           </p>
         </div>
       ) : (

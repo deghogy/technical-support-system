@@ -367,6 +367,15 @@ export default function HistoryPage() {
                         </div>
                       )}
 
+                      {r.actual_start_time && r.actual_end_time && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ color: '#22C55E' }}>⏱</span>
+                          <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>
+                            Duration: {((new Date(r.actual_end_time).getTime() - new Date(r.actual_start_time).getTime()) / (1000 * 60 * 60)).toFixed(1)} hours
+                          </span>
+                        </div>
+                      )}
+
                       {r.customer_confirmed_at && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ color: '#0077C8' }}>✓</span>

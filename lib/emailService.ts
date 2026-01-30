@@ -148,7 +148,7 @@ export async function sendScheduleConfirmationEmail({
         const result = await resend.emails.send({
           from: 'onboarding@resend.dev',
           to: email,
-          subject: 'Boccard Visit Scheduled',
+          subject: 'Boccard Visit Scheduled - ${siteLocation}',
           html: `
             <h2>A Visit Has Been Scheduled</h2>
             <p>Hi Boccard Admin,</p>
