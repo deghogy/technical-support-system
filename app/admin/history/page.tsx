@@ -409,8 +409,7 @@ export default function HistoryPage() {
                         background: '#EAF3FB',
                         borderRadius: '6px',
                         borderLeft: '3px solid #0077C8',
-                      }}
-003e
+                      }}>
                         <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#0077C8', fontWeight: 600 }}>
                           📎 Attached Document
                         </p>
