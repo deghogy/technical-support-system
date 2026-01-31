@@ -190,6 +190,10 @@ export default function LoginPage() {
           </div>
 
           <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+          <div className="login-copyright">
+            © Boccard Indonesia 2026
+          </div>
         </div>
       </div>
     </main>

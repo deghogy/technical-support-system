@@ -1037,6 +1037,15 @@ tr:hover td {
   background: #FEF2F2;
 }
 
+.login-copyright {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
 /* Login Page Responsive */
 @media (max-width: 900px) {
   .login-container {
