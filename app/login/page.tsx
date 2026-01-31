@@ -183,7 +183,7 @@ export default function LoginPage() {
                 </form>
 
                 <div className="login-help">
-                  <p>Need help? <Link href="/">Contact support</Link></p>
+                  <p>Need help? <a href="mailto:suboccardindonesia@gmail.com">Contact support</a></p>
                 </div>
               </div>
             )}
