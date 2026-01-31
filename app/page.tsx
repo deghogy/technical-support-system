@@ -457,8 +457,8 @@ export default function Home() {
                 'Check your available quota',
                 'Submit service request',
                 'Our team reviews and approves',
-                'Visit is scheduled',
-                'Technician completes work',
+                'Service is scheduled',
+                'Technician completes the work',
                 'You confirm completion',
               ].map((step, index) => (
                 <li
