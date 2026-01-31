@@ -60,6 +60,7 @@ export async function sendApprovalNotificationEmail({
   requestedDate,
   estimatedHours,
   requestId,
+  supportType = 'onsite',
 }: {
   adminEmails: string[]
   requesterName: string
@@ -69,8 +70,10 @@ export async function sendApprovalNotificationEmail({
   requestedDate: string
   estimatedHours: number
   requestId: string
+  supportType?: 'remote' | 'onsite'
 }) {
   const approvalLink = `${getBaseUrl()}/admin/approvals`
+  const visitTypeText = supportType === 'remote' ? 'Remote Support' : 'Site Visit'
 
   try {
     const resend = getResendClient()
@@ -83,7 +86,7 @@ export async function sendApprovalNotificationEmail({
         from: 'support@boccard-tsns.id',
         to: requesterEmail,
         cc: ccEmails.length > 0 ? ccEmails : undefined,
-        subject: `Boccard Visit Request Received - ${siteLocation}`,
+        subject: `Boccard ${visitTypeText} Request Received - ${siteLocation}`,
         react: ApprovalNotificationEmail({
           requesterName,
           requesterEmail,
@@ -92,6 +95,7 @@ export async function sendApprovalNotificationEmail({
           requestedDate,
           estimatedHours,
           approvalLink,
+          supportType,
         }) as React.ReactElement,
       })
       logger.info(
@@ -123,6 +127,7 @@ export async function sendScheduleConfirmationEmail({
   scheduledDate,
   durationHours,
   trackingLink,
+  supportType = 'onsite',
 }: {
   adminEmails: string[]
   requesterEmail: string
@@ -131,10 +136,15 @@ export async function sendScheduleConfirmationEmail({
   scheduledDate: string
   durationHours?: number
   trackingLink: string
+  supportType?: 'remote' | 'onsite'
 }) {
   try {
     const resend = getResendClient()
     const durationText = durationHours ? `<p><strong>Expected Duration:</strong> ${durationHours} hours</p>` : ''
+    const visitTypeText = supportType === 'remote' ? 'Remote Support' : 'Site Visit'
+    const greetingText = supportType === 'remote'
+      ? `Your remote support session has been approved and scheduled!`
+      : `Your site visit has been approved and scheduled!`
 
     // Send to customer as main recipient, admins in CC
     const ccEmails = adminEmails.filter(email => email !== requesterEmail)
@@ -144,11 +154,11 @@ export async function sendScheduleConfirmationEmail({
         from: 'support@boccard-tsns.id',
         to: requesterEmail,
         cc: ccEmails.length > 0 ? ccEmails : undefined,
-        subject: `Boccard Visit Scheduled - ${siteLocation}`,
+        subject: `Boccard ${visitTypeText} Scheduled - ${siteLocation}`,
         html: `
-          <h2>Your Site Visit Has Been Scheduled</h2>
+          <h2>Your ${visitTypeText} Has Been Scheduled</h2>
           <p>Hi ${requesterName},</p>
-          <p>Your site visit request has been approved and scheduled!</p>
+          <p>${greetingText}</p>
           <div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
             <p><strong>Location:</strong> ${siteLocation}</p>
             <p><strong>Scheduled Date:</strong> ${scheduledDate}</p>
@@ -194,6 +204,7 @@ export async function sendVisitCompletionEmail({
   technicianNotes,
   customerNotes,
   documentUrl,
+  supportType = 'onsite',
 }: {
   adminEmails: string[]
   requesterEmail: string
@@ -203,6 +214,7 @@ export async function sendVisitCompletionEmail({
   technicianNotes?: string | null
   customerNotes?: string | null
   documentUrl?: string | null
+  supportType?: 'remote' | 'onsite'
 }) {
   try {
     const resend = getResendClient()
@@ -231,6 +243,12 @@ export async function sendVisitCompletionEmail({
         </div>`
       : ''
 
+    // Determine visit type text
+    const visitTypeText = supportType === 'remote' ? 'Remote Support' : 'Site Visit'
+    const completedText = supportType === 'remote'
+      ? `Your remote support session for <strong>${siteLocation}</strong> has been completed by our technician.`
+      : `Your site visit at <strong>${siteLocation}</strong> has been completed by our technician.`
+
     // Send to customer as main recipient, admins in CC
     const ccEmails = adminEmails.filter(email => email !== requesterEmail)
 
@@ -239,18 +257,18 @@ export async function sendVisitCompletionEmail({
         from: 'support@boccard-tsns.id',
         to: requesterEmail,
         cc: ccEmails.length > 0 ? ccEmails : undefined,
-        subject: `Boccard Visit Completed - ${siteLocation}`,
+        subject: `Boccard ${visitTypeText} Completed - ${siteLocation}`,
         html: `
-          <h2>Site Visit Completed</h2>
+          <h2>${visitTypeText} Completed</h2>
           <p>Hi ${requesterName},</p>
-          <p>Your scheduled site visit at <strong>${siteLocation}</strong> has been completed by our technician.</p>
+          <p>${completedText}</p>
           ${technicianNotesHtml}
           ${customerNotesHtml}
           ${documentHtml}
           <p>Please review the visit details and confirm that the work was completed to your satisfaction.</p>
           <p>
             <a href="${confirmationLink}" style="background-color: #1e90ff; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold;">
-              Confirm Visit Completion
+              Confirm ${visitTypeText} Completion
             </a>
           </p>
           <p style="color: #999; font-size: 12px;">

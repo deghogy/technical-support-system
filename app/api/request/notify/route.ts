@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       requestedDate: new Date(requestData.requested_date).toLocaleDateString(),
       estimatedHours: requestData.estimated_hours,
       requestId,
+      supportType: requestData.support_type || 'onsite',
     })
 
     logger.info(

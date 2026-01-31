@@ -6,6 +6,7 @@ export default function ApprovalNotificationEmail({
   requestedDate,
   estimatedHours,
   approvalLink,
+  supportType = 'onsite',
 }: {
   requesterName: string
   requesterEmail: string
@@ -14,14 +15,18 @@ export default function ApprovalNotificationEmail({
   requestedDate: string
   estimatedHours: number
   approvalLink: string
+  supportType?: 'remote' | 'onsite'
 }) {
+  const visitTypeText = supportType === 'remote' ? 'Remote Support' : 'Site Visit'
+  const locationLabel = supportType === 'remote' ? 'Location/Remote Area' : 'Site Location'
+
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
-      <h2>New Site Visit Request Pending Approval</h2>
-      
+      <h2>New {visitTypeText} Request Pending Approval</h2>
+
       <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '8px', margin: '16px 0' }}>
         <p><strong>Requester:</strong> {requesterName} ({requesterEmail})</p>
-        <p><strong>Site Location:</strong> {siteLocation}</p>
+        <p><strong>{locationLabel}:</strong> {siteLocation}</p>
         <p><strong>Problem:</strong> {problemDesc}</p>
         <p><strong>Requested Date:</strong> {requestedDate}</p>
         <p><strong>Estimated Hours:</strong> {estimatedHours}h</p>

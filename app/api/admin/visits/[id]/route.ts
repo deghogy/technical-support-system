@@ -227,6 +227,7 @@ export async function POST(
           technicianNotes: validatedData.technician_notes,
           customerNotes: visitData?.customer_notes,
           documentUrl: updatePayload.document_url,
+          supportType: requestData.support_type || 'onsite',
         })
 
         logger.info({ id, email: requestData.requester_email }, 'Visit completion email sent to customer')

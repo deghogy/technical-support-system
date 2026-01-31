@@ -119,6 +119,7 @@ export async function POST(
           scheduledDate: formattedDate,
           durationHours: validatedData.duration_hours ? Number(validatedData.duration_hours) : undefined,
           trackingLink: `${getBaseUrl()}/track-request`,
+          supportType: requestData.support_type || 'onsite',
         })
 
         logger.info({ id, email: requestData.requester_email }, 'Schedule confirmation email sent')
