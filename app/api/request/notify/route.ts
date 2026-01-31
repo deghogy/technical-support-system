@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createSupabaseRouteClient } from '@/lib/supabaseRoute'
-import { sendApprovalNotificationEmail, getAdminEmails } from '@/lib/emailService'
+import { sendCustomerRequestConfirmation, sendAdminNewRequestNotification, getAdminEmails } from '@/lib/emailService'
 import logger from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
@@ -35,10 +35,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Request not found' }, { status: 404 })
     }
 
-    // Get all admin emails and send notification
+    // Send separate emails to customer and admins
     const adminEmails = await getAdminEmails()
 
-    const result = await sendApprovalNotificationEmail({
+    // 1. Send confirmation to customer (no admin links)
+    const customerResult = await sendCustomerRequestConfirmation({
+      requesterName: requestData.requester_name,
+      requesterEmail: requestData.requester_email,
+      siteLocation: requestData.site_location,
+      problemDesc: requestData.problem_desc,
+      requestedDate: new Date(requestData.requested_date).toLocaleDateString(),
+      estimatedHours: requestData.estimated_hours,
+      requestId,
+      supportType: requestData.support_type || 'onsite',
+    })
+
+    // 2. Send notification to admins (with approval link)
+    const adminResult = await sendAdminNewRequestNotification({
       adminEmails,
       requesterName: requestData.requester_name,
       requesterEmail: requestData.requester_email,
@@ -51,11 +64,15 @@ export async function POST(request: NextRequest) {
     })
 
     logger.info(
-      { requestId, totalEmails: result.totalCount, successCount: result.successCount },
+      { requestId, customerSuccess: customerResult.success, adminSuccess: adminResult.successCount },
       'Notification emails processed'
     )
 
-    return NextResponse.json({ success: true, successCount: result.successCount, totalEmails: result.totalCount })
+    return NextResponse.json({
+      success: true,
+      customerEmail: { success: customerResult.success },
+      adminEmails: { successCount: adminResult.successCount, totalCount: adminResult.totalCount }
+    })
   } catch (error) {
     logger.error({ error }, 'Unexpected error in notification route')
     return NextResponse.json(
