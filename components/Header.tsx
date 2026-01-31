@@ -3,12 +3,19 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import UserMenu from '@/components/UserMenu'
 import { useAuth } from '@/components/contexts/AuthProvider'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, role: userRole, loading } = useAuth()
+  const pathname = usePathname()
+
+  // Don't show header on login page
+  if (pathname === '/login') {
+    return null
+  }
 
   const navLinks = []
   if (user && userRole === 'admin') {
