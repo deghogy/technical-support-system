@@ -2,31 +2,13 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import UserMenu from '@/components/UserMenu'
-import { supabase } from '@/lib/supabaseClient'
+import { useAuth } from '@/components/contexts/AuthProvider'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const [userRole, setUserRole] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function getUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        setUserRole(profile?.role || null)
-      }
-    }
-    getUser()
-  }, [])
+  const { user, role: userRole, loading } = useAuth()
 
   const navLinks = []
   if (user && userRole === 'admin') {

@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/components/contexts/AuthProvider'
 
 export default function UserMenu({ user, role }: { user?: any; role?: string }) {
   const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const { signOut } = useAuth()
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -22,10 +23,9 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
   }, [])
 
   async function handleLogout() {
-    setLoading(true)
-    await supabase.auth.signOut()
+    setLoggingOut(true)
+    await signOut()
     router.push('/login')
-    router.refresh()
   }
 
   if (!user) {
@@ -183,7 +183,7 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
           <div style={{ padding: '8px' }}>
             <button
               onClick={handleLogout}
-              disabled={loading}
+              disabled={loggingOut}
               style={{
                 width: '100%',
                 background: 'transparent',
@@ -208,7 +208,7 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
               }}
             >
               <span style={{ fontSize: '16px' }}>🚪</span>
-              {loading ? 'Logging out...' : 'Sign Out'}
+              {loggingOut ? 'Logging out...' : 'Sign Out'}
             </button>
           </div>
         </div>
