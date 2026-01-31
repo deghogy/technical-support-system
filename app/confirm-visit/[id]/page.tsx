@@ -154,6 +154,8 @@ export default function ConfirmVisitPage() {
             </p>
             <a
               href={visit.document_url}
+              target="_blank"
+              rel="noopener noreferrer"
               download
               style={{
                 display: 'inline-flex',
