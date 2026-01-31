@@ -108,7 +108,7 @@ export default function LoginPage() {
                 <div className="login-success-icon">✓</div>
                 <h3>You&apos;re already signed in!</h3>
                 <p className="login-user-info">
-                  Signed in as <strong>{signedInUser}</strong>
+                  Signed in as <strong>{signedInUser.email}</strong>
                   {signedInRole && (
                     <span className="login-role-badge">{signedInRole}</span>
                   )}
