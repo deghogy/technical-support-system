@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/contexts/AuthProvider'
 
-export default function UserMenu({ user, role }: { user?: any; role?: string }) {
+export default function UserMenu({ user, role, name }: { user?: any; role?: string; name?: string }) {
   const [open, setOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -67,7 +67,7 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           }}
         >
-          {user.email?.[0].toUpperCase()}
+          {(name || user.email)?.[0].toUpperCase()}
         </div>
         <span
           style={{
@@ -77,7 +77,7 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
             whiteSpace: 'nowrap',
           }}
         >
-          {user.email?.split('@')[0]}
+          {name || user.user_metadata?.name || user.email?.split('@')[0]}
         </span>
         <span style={{
           fontSize: '10px',
@@ -125,7 +125,7 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
                   border: '2px solid rgba(255,255,255,0.3)',
                 }}
               >
-                {user.email?.[0].toUpperCase()}
+                {(name || user.email)?.[0].toUpperCase()}
               </div>
               <div>
                 <p
@@ -136,7 +136,7 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
                     color: '#FFFFFF',
                   }}
                 >
-                  {user.email?.split('@')[0]}
+                  {name || user.user_metadata?.name || user.email?.split('@')[0]}
                 </p>
                 {role && (
                   <span

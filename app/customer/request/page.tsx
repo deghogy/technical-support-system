@@ -14,7 +14,7 @@ interface Location {
 
 export default function CustomerRequestPage() {
   const router = useRouter()
-  const { user, role, loading: authLoading } = useAuth()
+  const { user, role, name: userName, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [quota, setQuota] = useState<any>(null)
   const [checkingQuota, setCheckingQuota] = useState(false)
@@ -225,7 +225,7 @@ export default function CustomerRequestPage() {
               Name
             </label>
             <p style={{ margin: 0, fontSize: '14px', color: '#0F172A' }}>
-              {user.user_metadata?.name || 'Not set'}
+              {userName || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Not set'}
             </p>
           </div>
           <div>
@@ -270,7 +270,11 @@ export default function CustomerRequestPage() {
             </button>
             <button
               type="button"
-              onClick={() => setSupportType('remote')}
+              onClick={() => {
+                setSupportType('remote')
+                // Set default location for Remote Support
+                setSelectedLocation('Boccard Indonesia - Automation')
+              }}
               style={{
                 flex: 1,
                 padding: '12px 16px',

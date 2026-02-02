@@ -9,7 +9,7 @@ import { useAuth } from '@/components/contexts/AuthProvider'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { user, role: userRole, loading } = useAuth()
+  const { user, role: userRole, name: userName, loading } = useAuth()
   const pathname = usePathname()
 
   // Don't show header on login page
@@ -119,7 +119,7 @@ export default function Header() {
           ))}
 
           <div style={{ marginLeft: '8px' }}>
-            <UserMenu user={user} role={userRole || undefined} />
+            <UserMenu user={user} role={userRole || undefined} name={userName || undefined} />
           </div>
         </nav>
 
@@ -176,7 +176,7 @@ export default function Header() {
             </Link>
           ))}
           <div style={{ padding: '12px 0' }}>
-            <UserMenu user={user} role={userRole || undefined} />
+            <UserMenu user={user} role={userRole || undefined} name={userName || undefined} />
           </div>
         </div>
       )}
