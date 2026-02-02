@@ -5,6 +5,7 @@ import logger from '@/lib/logger'
 /**
  * GET /api/customer/quota
  * Returns authenticated customer's quota information
+ * Admins can query any customer's quota by providing email param
  */
 export async function GET(req: NextRequest) {
   try {
@@ -21,11 +22,39 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Get quota for the authenticated user
+    // Get email from query param or use authenticated user's email
+    const { searchParams } = new URL(req.url)
+    const emailParam = searchParams.get('email')
+
+    // Check if user is admin
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'approver'
+
+    // Determine which email to query:
+    // - Admins can query any email (use param if provided, fallback to own email)
+    // - Customers can only query their own email
+    let queryEmail = user.email
+    if (emailParam) {
+      if (isAdmin) {
+        queryEmail = emailParam
+      } else if (emailParam !== user.email) {
+        return NextResponse.json(
+          { message: 'Forbidden - Can only view your own quota' },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Get quota for the specified user
     const { data: quota, error } = await supabase
       .from('customer_quotas')
       .select('*')
-      .eq('customer_email', user.email)
+      .eq('customer_email', queryEmail)
       .single()
 
     if (error && error.code !== 'PGRST116') {
@@ -39,7 +68,7 @@ export async function GET(req: NextRequest) {
     // If no quota exists, return default (0 hours available)
     if (!quota) {
       return NextResponse.json({
-        customerEmail: user.email,
+        customerEmail: queryEmail,
         totalHours: 0,
         usedHours: 0,
         availableHours: 0,
