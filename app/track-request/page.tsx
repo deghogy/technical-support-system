@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import { useToast, ToastContainer } from '@/components/Toast'
+import { useAuth } from '@/components/contexts/AuthProvider'
 
 function QRCode({ url }: { url: string }) {
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`
@@ -25,6 +27,8 @@ type SortOption = 'newest' | 'oldest' | 'location' | 'status'
 type FilterOption = 'all' | 'pending' | 'approved' | 'scheduled' | 'completed' | 'rejected'
 
 export default function TrackRequestPage() {
+  const router = useRouter()
+  const { user, role: userRole, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [requests, setRequests] = useState<any[]>([])
   const [quota, setQuota] = useState<any>(null)
@@ -35,29 +39,44 @@ export default function TrackRequestPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const { toasts, toast, removeToast } = useToast()
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, authLoading, router])
+
+  // Auto-fill email for customers and auto-search
+  useEffect(() => {
+    if (user && userRole === 'customer') {
+      setEmail(user.email || '')
+      // Auto-search for customers
+      if (user.email) {
+        handleSearchForEmail(user.email)
+      }
+    }
+  }, [user, userRole])
+
+  async function handleSearchForEmail(searchEmail: string) {
     setLoading(true)
     setRequests([])
     setQuota(null)
     setSearched(true)
 
     try {
-      const res = await fetch(`/api/customer/track?email=${encodeURIComponent(email)}`)
+      const res = await fetch(`/api/customer/track?email=${encodeURIComponent(searchEmail)}`)
       if (res.ok) {
         const data = await res.json()
         setRequests(data.requests || [])
         if (data.requests.length === 0) {
           toast.warning('No Requests Found', 'No requests found for this email address')
-        } else {
-          toast.success('Requests Loaded', `Found ${data.requests.length} request(s)`)
         }
       } else {
         toast.error('Error', 'Failed to load requests')
       }
 
       // Load quota
-      const quotaRes = await fetch(`/api/customer/quota?email=${encodeURIComponent(email)}`)
+      const quotaRes = await fetch(`/api/customer/quota?email=${encodeURIComponent(searchEmail)}`)
       if (quotaRes.ok) {
         const quotaData = await quotaRes.json()
         setQuota(quotaData)
@@ -68,6 +87,11 @@ export default function TrackRequestPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    handleSearchForEmail(email)
   }
 
   const getStatusColor = (status: string, visitStatus: string) => {
@@ -131,6 +155,21 @@ export default function TrackRequestPage() {
     ? Math.round((quota.usedHours / quota.totalHours) * 100)
     : 0
 
+  if (authLoading) {
+    return (
+      <main style={{ maxWidth: 900, margin: '40px auto', padding: '0 24px', textAlign: 'center' }}>
+        <p>Loading...</p>
+      </main>
+    )
+  }
+
+  if (!user) {
+    return null // Will redirect
+  }
+
+  const isCustomer = userRole === 'customer'
+  const isAdmin = userRole === 'admin' || userRole === 'approver'
+
   return (
     <main style={{ maxWidth: 900, margin: '40px auto', padding: '0 24px' }}>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -138,7 +177,7 @@ export default function TrackRequestPage() {
           Track Your Request
         </h1>
         <p style={{ color: '#64748B', margin: 0, fontSize: '15px' }}>
-          Enter your email to check request status
+          {isCustomer ? 'View your service request status' : 'Enter email to check request status'}
         </p>
       </div>
 
@@ -150,12 +189,25 @@ export default function TrackRequestPage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
-            style={{ flex: 1, marginBottom: 0 }}
+            readOnly={isCustomer}
+            style={{
+              flex: 1,
+              marginBottom: 0,
+              backgroundColor: isCustomer ? '#F1F5F9' : '#FFFFFF',
+              cursor: isCustomer ? 'not-allowed' : 'text'
+            }}
           />
-          <button type="submit" disabled={loading} style={{ whiteSpace: 'nowrap' }}>
-            {loading ? 'Searching...' : 'Track Request'}
-          </button>
+          {isAdmin && (
+            <button type="submit" disabled={loading} style={{ whiteSpace: 'nowrap' }}>
+              {loading ? 'Searching...' : 'Track Request'}
+            </button>
+          )}
         </div>
+        {isCustomer && (
+          <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#64748B' }}>
+            Showing requests for your account
+          </p>
+        )}
       </form>
 
       {/* Quota Display */}

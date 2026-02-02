@@ -1,6 +1,24 @@
+'use client'
+
 import Link from 'next/link'
+import { useAuth } from '@/components/contexts/AuthProvider'
 
 export default function Home() {
+  const { user, role: userRole } = useAuth()
+
+  // Determine Get Started link based on auth state
+  const getStartedHref = user
+    ? userRole === 'customer'
+      ? '/customer/request'
+      : '/admin/dashboard'
+    : '/login'
+
+  const getStartedLabel = user
+    ? userRole === 'customer'
+      ? 'Service Request'
+      : 'Dashboard'
+    : 'Get Started'
+
   return (
     <main>
       {/* Hero Section */}
@@ -58,7 +76,7 @@ export default function Home() {
             flexWrap: 'wrap',
           }}>
             <Link
-              href="/login"
+              href={getStartedHref}
               style={{
                 background: '#FFFFFF',
                 color: '#0077C8',
@@ -70,7 +88,7 @@ export default function Home() {
                 transition: 'transform 0.2s ease',
               }}
             >
-              Get Started
+              {getStartedLabel}
             </Link>
             <Link
               href="/track-request"
@@ -336,7 +354,6 @@ export default function Home() {
           </Link>
         </div>
       </section>
-
     </main>
   )
 }
