@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const { data: quota, error } = await supabase
       .from('customer_quotas')
       .select('*')
-      .eq('email', user.email)
+      .eq('customer_email', user.email)
       .single()
 
     if (error && error.code !== 'PGRST116') {
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      customerEmail: quota.email,
+      customerEmail: quota.customer_email,
       totalHours: quota.total_hours,
       usedHours: quota.used_hours,
       availableHours: quota.total_hours - quota.used_hours,

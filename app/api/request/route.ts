@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     const { data: quotaData } = await supabase
       .from('customer_quotas')
       .select('total_hours, used_hours')
-      .eq('email', user.email)
+      .eq('customer_email', user.email)
       .single()
 
     if (!quotaData) {
