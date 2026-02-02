@@ -21,12 +21,23 @@ export default async function DashboardPage() {
   if (!['admin', 'approver'].includes(profile?.role ?? '')) redirect('/')
 
   // Get counts
-  const [{ count: pending }, { count: approved }, { count: rejected }, { count: confirmed }] = await Promise.all([
+  const [{ count: pending }, { count: approved }, { count: confirmed }] = await Promise.all([
     supabase.from('site_visit_requests').select('id', { count: 'exact' }).eq('status', 'pending'),
     supabase.from('site_visit_requests').select('id', { count: 'exact' }).eq('status', 'approved'),
-    supabase.from('site_visit_requests').select('id', { count: 'exact' }).eq('status', 'rejected'),
     supabase.from('site_visit_requests').select('id', { count: 'exact' }).eq('visit_status', 'confirmed'),
   ])
+
+  // Get quota summary
+  const { data: quotas } = await supabase
+    .from('customer_quotas')
+    .select('total_hours, used_hours')
+
+  const quotaSummary = quotas?.reduce((acc, q) => ({
+    total: acc.total + (q.total_hours || 0),
+    used: acc.used + (q.used_hours || 0),
+  }), { total: 0, used: 0 }) || { total: 0, used: 0 }
+  const availableHours = quotaSummary.total - quotaSummary.used
+  const quotaPercentage = quotaSummary.total > 0 ? Math.round((quotaSummary.used / quotaSummary.total) * 100) : 0
 
   // Get scheduled visits that haven't been recorded yet
   const { data: scheduledVisits } = await supabase
@@ -156,22 +167,38 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* Rejected - Red/Danger */}
+        {/* Quotas - Purple/Violet */}
         <div className="card" style={{
           padding: '20px',
-          background: 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)',
-          border: '1px solid #FECACA',
-          borderLeft: '4px solid #EF4444',
+          background: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
+          border: '1px solid #DDD6FE',
+          borderLeft: '4px solid #8B5CF6',
         }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
-            Rejected
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#5B21B6', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
+            Quotas
           </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, color: '#DC2626', margin: 0 }}>
-            {rejected ?? 0}
+          <p style={{ fontSize: '32px', fontWeight: 700, color: '#7C3AED', margin: 0 }}>
+            {availableHours}h
           </p>
-          <p style={{ fontSize: '13px', color: '#EF4444', margin: '8px 0 0 0' }}>
-            Declined requests
+          <p style={{ fontSize: '13px', color: '#8B5CF6', margin: '8px 0 0 0' }}>
+            {quotaPercentage}% used of {quotaSummary.total}h
           </p>
+          <div style={{
+            width: '100%',
+            height: '4px',
+            background: '#E9D5FF',
+            borderRadius: '2px',
+            marginTop: '10px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${quotaPercentage}%`,
+              background: quotaPercentage > 80 ? '#DC2626' : quotaPercentage > 50 ? '#F59E0B' : '#8B5CF6',
+              borderRadius: '2px',
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
         </div>
       </div>
 
