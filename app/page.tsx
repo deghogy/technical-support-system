@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 
 export default function Home() {
   return (
@@ -33,19 +32,6 @@ export default function Home() {
         }} />
 
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <Image
-            src="/assets/logo-boccard.png"
-            alt="Boccard Logo"
-            width={100}
-            height={100}
-            priority
-            style={{
-              borderRadius: '12px',
-              background: '#FFFFFF',
-              padding: '8px',
-              marginBottom: '32px',
-            }}
-          />
           <h1 style={{
             fontSize: 'clamp(32px, 5vw, 48px)',
             fontWeight: 700,
@@ -351,29 +337,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer Info */}
-      <section style={{
-        padding: '40px 20px',
-        background: '#F1F5F9',
-        textAlign: 'center',
-      }}>
-        <div className="container">
-          <p style={{
-            fontSize: '14px',
-            color: '#64748B',
-            margin: 0,
-          }}>
-            © 2026 Boccard Indonesia. All rights reserved.
-          </p>
-          <p style={{
-            fontSize: '13px',
-            color: '#94A3B8',
-            margin: '8px 0 0 0',
-          }}>
-            Technical Support Management System
-          </p>
-        </div>
-      </section>
     </main>
   )
 }

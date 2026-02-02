@@ -25,28 +25,12 @@ export default function UserMenu({ user, role }: { user?: any; role?: string }) 
   async function handleLogout() {
     setLoggingOut(true)
     await signOut()
-    router.push('/login')
+    router.push('/')
+    router.refresh()
   }
 
   if (!user) {
-    return (
-      <a
-        href="/login"
-        style={{
-          color: '#FFFFFF',
-          textDecoration: 'none',
-          fontSize: '14px',
-          fontWeight: 500,
-          padding: '8px 14px',
-          borderRadius: '6px',
-          border: '1px solid rgba(255,255,255,0.4)',
-          background: 'transparent',
-          transition: 'all 0.15s ease',
-        }}
-      >
-        Admin Login
-      </a>
-    )
+    return null
   }
 
   return (

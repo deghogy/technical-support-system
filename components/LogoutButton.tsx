@@ -11,10 +11,9 @@ export default function LogoutButton() {
 
   async function logout() {
     setIsLoggingOut(true)
-    // Optimistic redirect - navigate immediately while signOut processes
-    router.push('/login')
-    // Fire signOut in background
-    signOut()
+    await signOut()
+    router.push('/')
+    router.refresh()
   }
 
   return (
