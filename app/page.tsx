@@ -6,7 +6,7 @@ export default function Home() {
       {/* Hero Section */}
       <section style={{
         background: 'linear-gradient(135deg, #0077C8 0%, #005FA3 100%)',
-        padding: '80px 20px 100px',
+        padding: '40px 20px 50px',
         textAlign: 'center',
         position: 'relative',
         overflow: 'hidden',
@@ -94,11 +94,11 @@ export default function Home() {
 
       {/* How It Works Section */}
       <section style={{
-        padding: '80px 20px',
+        padding: '40px 20px',
         background: '#F8FAFC',
       }}>
         <div className="container" style={{ maxWidth: '1000px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
             <h2 style={{
               fontSize: '32px',
               fontWeight: 700,
@@ -151,7 +151,7 @@ export default function Home() {
                 key={index}
                 style={{
                   background: '#FFFFFF',
-                  padding: '32px',
+                  padding: '24px',
                   borderRadius: '12px',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                   position: 'relative',
@@ -198,11 +198,11 @@ export default function Home() {
 
       {/* Features Section */}
       <section style={{
-        padding: '80px 20px',
+        padding: '40px 20px',
         background: '#FFFFFF',
       }}>
         <div className="container" style={{ maxWidth: '1000px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
             <h2 style={{
               fontSize: '32px',
               fontWeight: 700,
@@ -299,15 +299,15 @@ export default function Home() {
 
       {/* CTA Section */}
       <section style={{
-        padding: '80px 20px',
+        padding: '40px 20px',
         background: '#0F172A',
       }}>
         <div className="container" style={{ textAlign: 'center', maxWidth: '600px' }}>
           <h2 style={{
-            fontSize: '32px',
+            fontSize: '28px',
             fontWeight: 700,
             color: '#FFFFFF',
-            margin: '0 0 16px 0',
+            margin: '0 0 12px 0',
           }}>
             Ready to Get Started?
           </h2>

@@ -39,9 +39,8 @@ export default function Header() {
       { href: '/customer/locations', label: 'My Locations' }
     )
   } else {
-    // Guest users (not logged in)
+    // Guest users (not logged in) - only Sign In
     navLinks.push(
-      { href: '/track-request', label: 'Track Request' },
       { href: '/login', label: 'Sign In' }
     )
   }
