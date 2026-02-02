@@ -246,7 +246,10 @@ export default function CustomerRequestPage() {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               type="button"
-              onClick={() => setSupportType('onsite')}
+              onClick={() => {
+                setSupportType('onsite')
+                setSelectedLocation('')
+              }}
               style={{
                 flex: 1,
                 padding: '12px 16px',
@@ -306,14 +309,33 @@ export default function CustomerRequestPage() {
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
               {supportType === 'remote' ? 'Department / Area' : 'Site Location'}
             </label>
-            <Link
-              href="/customer/locations"
-              style={{ fontSize: '12px', color: '#0077C8', textDecoration: 'none' }}
-            >
-              Manage Locations →
-            </Link>
+            {supportType !== 'remote' && (
+              <Link
+                href="/customer/locations"
+                style={{ fontSize: '12px', color: '#0077C8', textDecoration: 'none' }}
+              >
+                Manage Locations →
+              </Link>
+            )}
           </div>
-          {locations.length > 0 ? (
+          {supportType === 'remote' ? (
+            // Remote Support - Fixed Department/Area
+            <input
+              type="text"
+              value="Boccard Indonesia - Automation"
+              disabled
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '6px',
+                border: '1px solid #E2E8F0',
+                fontSize: '14px',
+                background: '#F1F5F9',
+                color: '#64748B',
+                cursor: 'not-allowed',
+              }}
+            />
+          ) : locations.length > 0 ? (
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}

@@ -61,7 +61,7 @@ export default function VisitRecorder({ id }: { id: string }) {
         type="button"
         onClick={() => setOpen(!open)}
         style={{
-          background: open ? '#64748B' : '#0077C8',
+          background: '#0077C8',
           color: '#FFFFFF',
           border: 'none',
           padding: '10px 16px',
@@ -73,11 +73,38 @@ export default function VisitRecorder({ id }: { id: string }) {
           transition: 'all 0.15s ease',
         }}
       >
-        {open ? 'Cancel' : 'Record Visit'}
+        Record Visit
       </button>
 
       {open && (
-        <form onSubmit={handleSubmit} className="card" style={{ marginTop: 8 }}>
+        <form onSubmit={handleSubmit} className="card" style={{ marginTop: 8, position: 'relative' }}>
+          {/* Close X button */}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              background: 'transparent',
+              border: 'none',
+              color: '#64748B',
+              fontSize: '20px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '4px',
+              padding: 0,
+              lineHeight: 1,
+            }}
+            aria-label="Close"
+          >
+            ×
+          </button>
           <label style={{ display: 'block', marginBottom: 8 }}>
             <small style={{ color: 'var(--muted)' }}>Start time</small>
             <input

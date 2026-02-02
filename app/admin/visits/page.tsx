@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import VisitRecorder from '@/components/VisitRecorder'
-import VisitRejector from '@/components/VisitRejector'
 import QRCode from '@/components/QRCode'
 import { CopyableText } from '@/components/CopyableText'
 import { getBaseUrl } from '@/lib/env'
@@ -193,7 +192,6 @@ export default function VisitsPage() {
                       {/* Actions */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '160px' }}>
                         <VisitRecorder id={visit.id} />
-                        <VisitRejector id={visit.id} />
                       </div>
                     </div>
                   </div>
