@@ -27,17 +27,24 @@ export default async function DashboardPage() {
     supabase.from('site_visit_requests').select('id', { count: 'exact' }).eq('visit_status', 'confirmed'),
   ])
 
-  // Get quota summary
+  // Get quotas with customer emails
   const { data: quotas } = await supabase
     .from('customer_quotas')
-    .select('total_hours, used_hours')
+    .select('customer_email, total_hours, used_hours')
+    .order('used_hours', { ascending: false })
+
+  const quotaList = quotas?.map(q => ({
+    email: q.customer_email,
+    total: q.total_hours || 0,
+    used: q.used_hours || 0,
+    available: (q.total_hours || 0) - (q.used_hours || 0),
+    percentage: (q.total_hours || 0) > 0 ? Math.round(((q.used_hours || 0) / q.total_hours) * 100) : 0,
+  })) || []
 
   const quotaSummary = quotas?.reduce((acc, q) => ({
     total: acc.total + (q.total_hours || 0),
     used: acc.used + (q.used_hours || 0),
   }), { total: 0, used: 0 }) || { total: 0, used: 0 }
-  const availableHours = quotaSummary.total - quotaSummary.used
-  const quotaPercentage = quotaSummary.total > 0 ? Math.round((quotaSummary.used / quotaSummary.total) * 100) : 0
 
   // Get scheduled visits that haven't been recorded yet
   const { data: scheduledVisits } = await supabase
@@ -87,7 +94,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
         {/* Pending - Amber/Warning */}
         <div className="card" style={{
           padding: '20px',
@@ -167,39 +174,6 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* Quotas - Purple/Violet */}
-        <div className="card" style={{
-          padding: '20px',
-          background: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
-          border: '1px solid #DDD6FE',
-          borderLeft: '4px solid #8B5CF6',
-        }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#5B21B6', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px 0' }}>
-            Quotas
-          </p>
-          <p style={{ fontSize: '32px', fontWeight: 700, color: '#7C3AED', margin: 0 }}>
-            {availableHours}h
-          </p>
-          <p style={{ fontSize: '13px', color: '#8B5CF6', margin: '8px 0 0 0' }}>
-            {quotaPercentage}% used of {quotaSummary.total}h
-          </p>
-          <div style={{
-            width: '100%',
-            height: '4px',
-            background: '#E9D5FF',
-            borderRadius: '2px',
-            marginTop: '10px',
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              height: '100%',
-              width: `${quotaPercentage}%`,
-              background: quotaPercentage > 80 ? '#DC2626' : quotaPercentage > 50 ? '#F59E0B' : '#8B5CF6',
-              borderRadius: '2px',
-              transition: 'width 0.3s ease',
-            }} />
-          </div>
-        </div>
       </div>
 
       {/* Two Column Layout */}
@@ -340,6 +314,84 @@ export default async function DashboardPage() {
               })()}
             </div>
           )}
+
+          {/* Quotas Section */}
+          <div style={{ marginTop: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+                Customer Quotas
+              </h2>
+              {quotaList.length > 0 && (
+                <span style={{ fontSize: '13px', color: '#64748B' }}>
+                  {quotaSummary.used}h / {quotaSummary.total}h used
+                </span>
+              )}
+            </div>
+
+            {quotaList.length === 0 ? (
+              <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
+                  No quotas configured
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {(() => {
+                  const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
+                  return quotaList.map((q) => (
+                    <div key={q.email} className="card" style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          color: '#0F172A',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '60%'
+                        }}>
+                          {q.email}
+                        </span>
+                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#7C3AED' }}>
+                          {q.available}h <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 400 }}>avail</span>
+                        </span>
+                      </div>
+
+                      <div style={{
+                        width: '100%',
+                        height: '8px',
+                        background: '#F3E8FF',
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${(q.used / maxTotal) * 100}%`,
+                          background: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6',
+                          borderRadius: '4px',
+                          transition: 'width 0.3s ease',
+                        }} />
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                        <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>
+                          {q.used}h used of {q.total}h
+                        </p>
+                        <p style={{
+                          fontSize: '12px',
+                          color: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6',
+                          margin: 0,
+                          fontWeight: 500
+                        }}>
+                          {q.percentage}%
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                })()}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </main>
