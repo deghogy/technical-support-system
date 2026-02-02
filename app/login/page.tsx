@@ -48,9 +48,11 @@ export default function LoginPage() {
       .eq('id', user.id)
       .single()
 
-    // admins and approvers go to the approvals area
+    // Redirect based on role
     if (profile?.role === 'admin' || profile?.role === 'approver') {
       router.push('/admin/approvals')
+    } else if (profile?.role === 'customer') {
+      router.push('/customer/request')
     } else {
       router.push('/')
     }
@@ -115,7 +117,13 @@ export default function LoginPage() {
                 </p>
                 <div className="login-action-buttons">
                   <Link
-                    href={signedInRole === 'admin' || signedInRole === 'approver' ? '/admin/approvals' : '/'}
+                    href={
+                      signedInRole === 'admin' || signedInRole === 'approver'
+                        ? '/admin/approvals'
+                        : signedInRole === 'customer'
+                        ? '/customer/request'
+                        : '/'
+                    }
                     className="button button-primary"
                   >
                     Go to Dashboard

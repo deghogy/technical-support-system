@@ -32,6 +32,18 @@ export default function Header() {
       { href: '/admin/visits', label: 'Visits' },
       { href: '/admin/history', label: 'History' }
     )
+  } else if (user && userRole === 'customer') {
+    navLinks.push(
+      { href: '/customer/request', label: 'Service Request' },
+      { href: '/track-request', label: 'Track Request' },
+      { href: '/customer/locations', label: 'My Locations' }
+    )
+  } else {
+    // Guest users (not logged in)
+    navLinks.push(
+      { href: '/track-request', label: 'Track Request' },
+      { href: '/login', label: 'Sign In' }
+    )
   }
 
   return (
