@@ -256,67 +256,10 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Right Column - Hours by Location */}
+        {/* Right Column - Customer Quotas & Hours by Location */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
-              Hours by Location
-            </h2>
-            {totalHours > 0 && (
-              <span style={{ fontSize: '13px', color: '#64748B' }}>
-                Total: {totalHours}h
-              </span>
-            )}
-          </div>
-
-          {conductedByLocationArray.length === 0 ? (
-            <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-              <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
-                No conducted visits yet
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {(() => {
-                const maxHours = Math.max(...conductedByLocationArray.map(x => x.hours), 20)
-                return conductedByLocationArray.map((item) => (
-                  <div key={item.location} className="card" style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 500, color: '#0F172A' }}>
-                        {item.location}
-                      </span>
-                      <span style={{ fontSize: '16px', fontWeight: 700, color: '#0077C8' }}>
-                        {item.hours}h
-                      </span>
-                    </div>
-
-                    <div style={{
-                      width: '100%',
-                      height: '8px',
-                      background: '#EAF3FB',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                    }}>
-                      <div style={{
-                        height: '100%',
-                        width: `${(item.hours / maxHours) * 100}%`,
-                        background: '#0077C8',
-                        borderRadius: '4px',
-                        transition: 'width 0.3s ease',
-                      }} />
-                    </div>
-
-                    <p style={{ fontSize: '12px', color: '#64748B', margin: '6px 0 0 0' }}>
-                      {Math.round((item.hours / totalHours) * 100)}% of total hours
-                    </p>
-                  </div>
-                ))
-              })()}
-            </div>
-          )}
-
-          {/* Quotas Section */}
-          <div style={{ marginTop: '32px' }}>
+          {/* Quotas Section - First */}
+          <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
                 Customer Quotas
@@ -386,6 +329,66 @@ export default async function DashboardPage() {
                           {q.percentage}%
                         </p>
                       </div>
+                    </div>
+                  ))
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* Hours by Location - Second */}
+          <div style={{ marginTop: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+                Hours by Location
+              </h2>
+              {totalHours > 0 && (
+                <span style={{ fontSize: '13px', color: '#64748B' }}>
+                  Total: {totalHours}h
+                </span>
+              )}
+            </div>
+
+            {conductedByLocationArray.length === 0 ? (
+              <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
+                  No conducted visits yet
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {(() => {
+                  const maxHours = Math.max(...conductedByLocationArray.map(x => x.hours), 20)
+                  return conductedByLocationArray.map((item) => (
+                    <div key={item.location} className="card" style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 500, color: '#0F172A' }}>
+                          {item.location}
+                        </span>
+                        <span style={{ fontSize: '16px', fontWeight: 700, color: '#0077C8' }}>
+                          {item.hours}h
+                        </span>
+                      </div>
+
+                      <div style={{
+                        width: '100%',
+                        height: '8px',
+                        background: '#EAF3FB',
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${(item.hours / maxHours) * 100}%`,
+                          background: '#0077C8',
+                          borderRadius: '4px',
+                          transition: 'width 0.3s ease',
+                        }} />
+                      </div>
+
+                      <p style={{ fontSize: '12px', color: '#64748B', margin: '6px 0 0 0' }}>
+                        {Math.round((item.hours / totalHours) * 100)}% of total hours
+                      </p>
                     </div>
                   ))
                 })()}

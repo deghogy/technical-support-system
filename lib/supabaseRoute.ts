@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// Route handler Supabase client with improved connection handling
 export async function createSupabaseRouteClient() {
   const cookieStore = await cookies()
 
@@ -8,6 +9,22 @@ export async function createSupabaseRouteClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+      },
+      global: {
+        // Add timeout for API route fetch requests
+        fetch: (url: RequestInfo | URL, options?: RequestInit) => {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 25000) // 25 second timeout for API routes
+
+          return fetch(url, {
+            ...options,
+            signal: controller.signal,
+          }).finally(() => clearTimeout(timeoutId))
+        },
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll()
