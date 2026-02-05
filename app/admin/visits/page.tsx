@@ -27,13 +27,20 @@ export default function VisitsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isActive = true
+    let intervalId: NodeJS.Timeout | null = null
+
     async function loadVisits() {
+      if (!isActive) return
+
       try {
         // Fetch both types of visits
         const [scheduledRes, recordedRes] = await Promise.all([
           fetch('/api/admin/visits?type=scheduled'),
           fetch('/api/admin/visits?type=recorded')
         ])
+
+        if (!isActive) return
 
         if (scheduledRes.ok) {
           const data = await scheduledRes.json()
@@ -47,14 +54,46 @@ export default function VisitsPage() {
       } catch (err) {
         console.error('Failed to load visits:', err)
       } finally {
-        setLoading(false)
+        if (isActive) {
+          setLoading(false)
+        }
       }
     }
 
+    // Initial load
     loadVisits()
-    // Refresh every 10 seconds
-    const interval = setInterval(loadVisits, 10000)
-    return () => clearInterval(interval)
+
+    // Only start polling if tab is visible
+    const startPolling = () => {
+      if (intervalId) clearInterval(intervalId)
+      intervalId = setInterval(loadVisits, 30000) // Increased to 30 seconds
+    }
+
+    const stopPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+        intervalId = null
+      }
+    }
+
+    // Handle visibility change to pause polling when tab is hidden
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling()
+      } else {
+        loadVisits() // Refresh immediately when tab becomes visible
+        startPolling()
+      }
+    }
+
+    startPolling()
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      isActive = false
+      stopPolling()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   if (loading) {

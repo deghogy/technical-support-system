@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import { useToast, ToastContainer } from '@/components/Toast'
@@ -9,6 +9,79 @@ import QRCode from '@/components/QRCode'
 
 type SortOption = 'newest' | 'oldest' | 'location' | 'status'
 type FilterOption = 'all' | 'pending' | 'approved' | 'scheduled' | 'completed' | 'rejected'
+
+// Memoized filter button to prevent re-renders
+const FilterButton = memo(function FilterButton({
+  item,
+  isActive,
+  onClick
+}: {
+  item: { key: FilterOption; label: string; count: number }
+  isActive: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: isActive ? '#0077C8' : '#FFFFFF',
+        color: isActive ? '#FFFFFF' : '#475569',
+        border: `1px solid ${isActive ? '#0077C8' : '#D0D7E2'}`,
+        padding: '6px 12px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: isActive ? 500 : 400,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        transition: 'all 0.15s ease',
+      }}
+    >
+      {item.label}
+      <span style={{
+        background: isActive ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
+        color: isActive ? '#FFFFFF' : '#64748B',
+        padding: '2px 6px',
+        borderRadius: '10px',
+        fontSize: '11px',
+      }}>
+        {item.count}
+      </span>
+    </button>
+  )
+})
+
+// Memoized sort button
+const SortButton = memo(function SortButton({
+  option,
+  isActive,
+  onClick
+}: {
+  option: SortOption
+  isActive: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: isActive ? '#0077C8' : '#FFFFFF',
+        color: isActive ? '#FFFFFF' : '#475569',
+        border: `1px solid ${isActive ? '#0077C8' : '#D0D7E2'}`,
+        padding: '6px 14px',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: isActive ? 500 : 400,
+        textTransform: 'capitalize',
+        transition: 'all 0.15s ease',
+      }}
+    >
+      {option}
+    </button>
+  )
+})
 
 export default function TrackRequestPage() {
   const router = useRouter()
@@ -30,6 +103,39 @@ export default function TrackRequestPage() {
     }
   }, [user, authLoading, router])
 
+  // Memoized search handler
+  const handleSearchForEmail = useCallback(async (searchEmail: string) => {
+    setLoading(true)
+    setRequests([])
+    setQuota(null)
+    setSearched(true)
+
+    try {
+      const res = await fetch(`/api/customer/track?email=${encodeURIComponent(searchEmail)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setRequests(data.requests || [])
+        if (data.requests.length === 0) {
+          toast.warning('No Requests Found', 'No requests found for this email address')
+        }
+      } else {
+        toast.error('Error', 'Failed to load requests')
+      }
+
+      // Load quota
+      const quotaRes = await fetch(`/api/customer/quota?email=${encodeURIComponent(searchEmail)}`)
+      if (quotaRes.ok) {
+        const quotaData = await quotaRes.json()
+        setQuota(quotaData)
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Error', 'Failed to load requests. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
+
   // Auto-fill email for customers and auto-search
   useEffect(() => {
     if (user && userRole === 'customer') {
@@ -39,7 +145,7 @@ export default function TrackRequestPage() {
         handleSearchForEmail(user.email)
       }
     }
-  }, [user, userRole])
+  }, [user, userRole, handleSearchForEmail])
 
   async function handleSearchForEmail(searchEmail: string) {
     setLoading(true)
@@ -73,52 +179,76 @@ export default function TrackRequestPage() {
     }
   }
 
-  async function handleSearch(e: React.FormEvent) {
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     handleSearchForEmail(email)
-  }
+  }, [email, handleSearchForEmail])
 
-  const getStatusColor = (status: string, visitStatus: string) => {
+  // Memoized status helpers
+  const getStatusColor = useCallback((status: string, visitStatus: string) => {
     if (visitStatus === 'confirmed') return '#0077C8'
     if (status === 'rejected') return '#DC2626'
     if (status === 'approved') return '#22C55E'
     return '#F59E0B'
-  }
+  }, [])
 
-  const getStatusBgColor = (status: string, visitStatus: string) => {
+  const getStatusBgColor = useCallback((status: string, visitStatus: string) => {
     if (visitStatus === 'confirmed') return '#EAF3FB'
     if (status === 'rejected') return '#FEF2F2'
     if (status === 'approved') return '#F0FDF4'
     return '#FFFBEB'
-  }
+  }, [])
 
-  const getStatusLabel = (status: string, visitStatus: string) => {
+  const getStatusLabel = useCallback((status: string, visitStatus: string) => {
     if (visitStatus === 'confirmed') return 'Completed'
     if (visitStatus === 'visit-completed') return 'Awaiting Confirmation'
     if (status === 'rejected') return 'Rejected'
     if (status === 'approved') return 'Approved'
     return 'Pending'
-  }
+  }, [])
 
-  // Filter requests
-  const filteredRequests = requests.filter((r) => {
-    if (filter === 'all') return true
-    if (filter === 'pending') return r.status === 'pending'
-    if (filter === 'approved') return r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed'
-    if (filter === 'scheduled') return r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed'
-    if (filter === 'completed') return r.visit_status === 'confirmed'
-    if (filter === 'rejected') return r.status === 'rejected'
-    return true
-  })
+  // Memoized filter counts - calculated once per requests change
+  const filterCounts = useMemo(() => ({
+    all: requests.length,
+    pending: requests.filter(r => r.status === 'pending').length,
+    approved: requests.filter(r => r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed').length,
+    scheduled: requests.filter(r => r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed').length,
+    completed: requests.filter(r => r.visit_status === 'confirmed').length,
+    rejected: requests.filter(r => r.status === 'rejected').length,
+  }), [requests])
 
-  // Sort requests
-  const sortedRequests = [...filteredRequests].sort((a, b) => {
+  // Memoized filter options
+  const filterOptions = useMemo(() => [
+    { key: 'all' as FilterOption, label: 'All', count: filterCounts.all },
+    { key: 'pending' as FilterOption, label: 'Pending', count: filterCounts.pending },
+    { key: 'approved' as FilterOption, label: 'Approved', count: filterCounts.approved },
+    { key: 'scheduled' as FilterOption, label: 'Scheduled', count: filterCounts.scheduled },
+    { key: 'completed' as FilterOption, label: 'Completed', count: filterCounts.completed },
+    { key: 'rejected' as FilterOption, label: 'Rejected', count: filterCounts.rejected },
+  ], [filterCounts])
+
+  // Memoized filter requests
+  const filteredRequests = useMemo(() => {
+    return requests.filter((r) => {
+      if (filter === 'all') return true
+      if (filter === 'pending') return r.status === 'pending'
+      if (filter === 'approved') return r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed'
+      if (filter === 'scheduled') return r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed'
+      if (filter === 'completed') return r.visit_status === 'confirmed'
+      if (filter === 'rejected') return r.status === 'rejected'
+      return true
+    })
+  }, [requests, filter])
+
+  // Memoized sort requests
+  const sortedRequests = useMemo(() => {
+    const sorted = [...filteredRequests]
     if (sortBy === 'newest') {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     } else if (sortBy === 'oldest') {
-      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
     } else if (sortBy === 'location') {
-      return (a.site_location || '').localeCompare(b.site_location || '')
+      sorted.sort((a, b) => (a.site_location || '').localeCompare(b.site_location || ''))
     } else if (sortBy === 'status') {
       const statusOrder = { rejected: 0, pending: 1, approved: 2, scheduled: 3, confirmed: 4 }
       const getStatusKey = (r: any) => {
@@ -128,11 +258,13 @@ export default function TrackRequestPage() {
         if (r.status === 'approved') return 'approved'
         return 'pending'
       }
-      return (statusOrder[getStatusKey(a) as keyof typeof statusOrder] || 0) -
-             (statusOrder[getStatusKey(b) as keyof typeof statusOrder] || 0)
+      sorted.sort((a, b) =>
+        (statusOrder[getStatusKey(a) as keyof typeof statusOrder] || 0) -
+        (statusOrder[getStatusKey(b) as keyof typeof statusOrder] || 0)
+      )
     }
-    return 0
-  })
+    return sorted
+  }, [filteredRequests, sortBy])
 
   // Calculate used percentage correctly
   const usedPercentage = quota && quota.totalHours > 0
@@ -244,43 +376,13 @@ export default function TrackRequestPage() {
           border: '1px solid #E2E8F0'
         }}>
           <span style={{ color: '#64748B', fontSize: '13px', fontWeight: 600 }}>Filter:</span>
-          {([
-            { key: 'all', label: 'All', count: requests.length },
-            { key: 'pending', label: 'Pending', count: requests.filter(r => r.status === 'pending').length },
-            { key: 'approved', label: 'Approved', count: requests.filter(r => r.status === 'approved' && !r.scheduled_date && r.visit_status !== 'confirmed').length },
-            { key: 'scheduled', label: 'Scheduled', count: requests.filter(r => r.status === 'approved' && r.scheduled_date && r.visit_status !== 'confirmed').length },
-            { key: 'completed', label: 'Completed', count: requests.filter(r => r.visit_status === 'confirmed').length },
-            { key: 'rejected', label: 'Rejected', count: requests.filter(r => r.status === 'rejected').length },
-          ] as { key: FilterOption; label: string; count: number }[]).map((item) => (
-            <button
+          {filterOptions.map((item) => (
+            <FilterButton
               key={item.key}
+              item={item}
+              isActive={filter === item.key}
               onClick={() => setFilter(item.key)}
-              style={{
-                background: filter === item.key ? '#0077C8' : '#FFFFFF',
-                color: filter === item.key ? '#FFFFFF' : '#475569',
-                border: `1px solid ${filter === item.key ? '#0077C8' : '#D0D7E2'}`,
-                padding: '6px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: filter === item.key ? 500 : 400,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {item.label}
-              <span style={{
-                background: filter === item.key ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
-                color: filter === item.key ? '#FFFFFF' : '#64748B',
-                padding: '2px 6px',
-                borderRadius: '10px',
-                fontSize: '11px',
-              }}>
-                {item.count}
-              </span>
-            </button>
+            />
           ))}
         </div>
       )}
@@ -300,24 +402,12 @@ export default function TrackRequestPage() {
         }}>
           <span style={{ color: '#64748B', fontSize: '13px', fontWeight: 600 }}>Sort by:</span>
           {(['newest', 'oldest', 'location', 'status'] as SortOption[]).map((option) => (
-            <button
+            <SortButton
               key={option}
+              option={option}
+              isActive={sortBy === option}
               onClick={() => setSortBy(option)}
-              style={{
-                background: sortBy === option ? '#0077C8' : '#FFFFFF',
-                color: sortBy === option ? '#FFFFFF' : '#475569',
-                border: `1px solid ${sortBy === option ? '#0077C8' : '#D0D7E2'}`,
-                padding: '6px 14px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: sortBy === option ? 500 : 400,
-                textTransform: 'capitalize',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {option}
-            </button>
+            />
           ))}
         </div>
       )}
