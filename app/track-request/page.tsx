@@ -147,38 +147,6 @@ export default function TrackRequestPage() {
     }
   }, [user, userRole, handleSearchForEmail])
 
-  async function handleSearchForEmail(searchEmail: string) {
-    setLoading(true)
-    setRequests([])
-    setQuota(null)
-    setSearched(true)
-
-    try {
-      const res = await fetch(`/api/customer/track?email=${encodeURIComponent(searchEmail)}`)
-      if (res.ok) {
-        const data = await res.json()
-        setRequests(data.requests || [])
-        if (data.requests.length === 0) {
-          toast.warning('No Requests Found', 'No requests found for this email address')
-        }
-      } else {
-        toast.error('Error', 'Failed to load requests')
-      }
-
-      // Load quota
-      const quotaRes = await fetch(`/api/customer/quota?email=${encodeURIComponent(searchEmail)}`)
-      if (quotaRes.ok) {
-        const quotaData = await quotaRes.json()
-        setQuota(quotaData)
-      }
-    } catch (err) {
-      console.error(err)
-      toast.error('Error', 'Failed to load requests. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     handleSearchForEmail(email)
