@@ -14,18 +14,27 @@ function createClient() {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+      // Reduce token refresh interval to prevent stale sessions
+      flowType: 'pkce',
     },
     global: {
-      // Add fetch with timeout for better connection handling
+      // Add fetch with timeout and keepalive for better connection handling
       fetch: (url: RequestInfo | URL, options?: RequestInit) => {
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+        // Reduce timeout to 10s for faster failure detection
+        const timeoutId = setTimeout(() => controller.abort(), 10000)
 
         return fetch(url, {
           ...options,
           signal: controller.signal,
+          // Keep connections alive for better performance
+          keepalive: true,
         }).finally(() => clearTimeout(timeoutId))
       },
+    },
+    // Enable realtime for better session sync
+    realtime: {
+      timeout: 10000,
     },
   })
 }

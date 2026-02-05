@@ -17,11 +17,12 @@ export async function createSupabaseServerClient() {
         // Add timeout for server-side fetch requests
         fetch: (url: RequestInfo | URL, options?: RequestInit) => {
           const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 25000) // 25 second timeout for server
+          const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout for server
 
           return fetch(url, {
             ...options,
             signal: controller.signal,
+            keepalive: true,
           }).finally(() => clearTimeout(timeoutId))
         },
       },

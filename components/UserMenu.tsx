@@ -24,9 +24,22 @@ export default function UserMenu({ user, role, name }: { user?: any; role?: stri
 
   async function handleLogout() {
     setLoggingOut(true)
-    await signOut()
-    router.push('/')
-    router.refresh()
+
+    try {
+      await signOut()
+
+      // Force a full page reload to clear all state and cache
+      // This ensures no sticky auth state remains
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
+    } catch (error) {
+      console.error('Logout failed:', error)
+      // Even on error, force reload to clear any stuck state
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
+    }
   }
 
   if (!user) {
