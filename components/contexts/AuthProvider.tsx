@@ -16,7 +16,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Maximum time to wait for auth initialization (prevents infinite loading)
-const AUTH_TIMEOUT = 8000 // 8 seconds
+const AUTH_TIMEOUT = 15000 // 15 seconds - increased for slow connections
+const PROFILE_FETCH_TIMEOUT = 10000 // 10 seconds for profile fetch
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle() // Use maybeSingle instead of single to avoid errors if no profile
 
       const timeoutPromise = new Promise<null>((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 8000) // Increased to 8s
+        setTimeout(() => reject(new Error('Profile fetch timeout')), PROFILE_FETCH_TIMEOUT)
       )
 
       const profile = await Promise.race([fetchPromise, timeoutPromise])
@@ -109,9 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearAuthState])
 
   useEffect(() => {
+    let isMounted = true
+    let timeoutId: NodeJS.Timeout | null = null
+
     // Set a timeout to prevent infinite loading state
-    const timeoutId = setTimeout(() => {
-      if (!initialized) {
+    timeoutId = setTimeout(() => {
+      if (isMounted && !initialized) {
         console.warn('Auth initialization timed out')
         setLoading(false)
         setInitialized(true)
@@ -119,18 +123,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }, AUTH_TIMEOUT)
 
-    // Initial session check
-    refreshUser()
-      .then(() => {
-        setInitialized(true)
-        setLoading(false)
-      })
-      .catch((error) => {
-        console.warn('Auth initialization error:', error)
-        setInitialized(true)
-        setLoading(false)
-        clearAuthState()
-      })
+    // Initial session check - only run if not already initialized
+    if (!initialized) {
+      refreshUser()
+        .then(() => {
+          if (isMounted) {
+            setInitialized(true)
+            setLoading(false)
+          }
+        })
+        .catch((error) => {
+          console.warn('Auth initialization error:', error)
+          if (isMounted) {
+            setInitialized(true)
+            setLoading(false)
+            clearAuthState()
+          }
+        })
+    }
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -154,10 +164,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     )
 
     return () => {
-      clearTimeout(timeoutId)
+      isMounted = false
+      if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
-  }, [fetchProfile, clearAuthState, refreshUser, initialized])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty deps - only run once on mount
 
   return (
     <AuthContext.Provider value={{ user, role, name, loading, signOut, refreshUser }}>
