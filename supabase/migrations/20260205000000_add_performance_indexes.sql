@@ -85,9 +85,9 @@ ON customer_locations(customer_id, location_name);
 -- quota_logs table indexes
 -- ============================================
 
--- Index for quota_id foreign key lookups
-CREATE INDEX IF NOT EXISTS idx_quota_logs_quota_id
-ON quota_logs(quota_id);
+-- Index for customer_email lookups (quota logs by customer)
+CREATE INDEX IF NOT EXISTS idx_quota_logs_customer_email
+ON quota_logs(customer_email);
 
 -- Index for created_at ordering in logs
 CREATE INDEX IF NOT EXISTS idx_quota_logs_created_at_desc
