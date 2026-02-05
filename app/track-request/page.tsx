@@ -5,23 +5,7 @@ import { useRouter } from 'next/navigation'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import { useToast, ToastContainer } from '@/components/Toast'
 import { useAuth } from '@/components/contexts/AuthProvider'
-
-function QRCode({ url }: { url: string }) {
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`
-
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <img
-        src={qrCodeUrl}
-        alt="QR Code"
-        style={{ width: '100px', height: '100px', borderRadius: '8px', border: '1px solid #E2E8F0' }}
-      />
-      <p style={{ fontSize: '11px', color: '#64748B', margin: '6px 0 0 0' }}>
-        Scan to confirm
-      </p>
-    </div>
-  )
-}
+import QRCode from '@/components/QRCode'
 
 type SortOption = 'newest' | 'oldest' | 'location' | 'status'
 type FilterOption = 'all' | 'pending' | 'approved' | 'scheduled' | 'completed' | 'rejected'
