@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, memo } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
 import { useToast, ToastContainer } from '@/components/Toast'
@@ -9,6 +9,9 @@ import QRCode from '@/components/QRCode'
 
 type SortOption = 'newest' | 'oldest' | 'location' | 'status'
 type FilterOption = 'all' | 'pending' | 'approved' | 'scheduled' | 'completed' | 'rejected'
+
+const MAX_RETRIES = 3
+const RETRY_DELAY = 1000
 
 // Memoized filter button to prevent re-renders
 const FilterButton = memo(function FilterButton({
@@ -96,6 +99,11 @@ export default function TrackRequestPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const { toasts, toast, removeToast } = useToast()
 
+  // Track request state to prevent infinite loops
+  const isFetchingRef = useRef(false)
+  const retryCountRef = useRef(0)
+  const hasAttemptedFetchRef = useRef(false)
+
   // Redirect if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
@@ -103,11 +111,26 @@ export default function TrackRequestPage() {
     }
   }, [user, authLoading, router])
 
-  // Memoized search handler
-  const handleSearchForEmail = useCallback(async (searchEmail: string) => {
+  // Memoized search handler with retry logic and deduplication
+  const handleSearchForEmail = useCallback(async (searchEmail: string, isRetry = false) => {
+    // Prevent concurrent requests
+    if (isFetchingRef.current) {
+      console.log('Fetch already in progress, skipping...')
+      return
+    }
+
+    // Prevent infinite retries
+    if (!isRetry) {
+      retryCountRef.current = 0
+    } else if (retryCountRef.current >= MAX_RETRIES) {
+      console.log('Max retries reached, giving up')
+      toast.error('Error', 'Failed to load requests after multiple attempts. Please refresh the page.')
+      setLoading(false)
+      return
+    }
+
+    isFetchingRef.current = true
     setLoading(true)
-    setRequests([])
-    setQuota(null)
     setSearched(true)
 
     try {
@@ -115,11 +138,12 @@ export default function TrackRequestPage() {
       if (res.ok) {
         const data = await res.json()
         setRequests(data.requests || [])
+        retryCountRef.current = 0 // Reset retry count on success
         if (data.requests.length === 0) {
           toast.warning('No Requests Found', 'No requests found for this email address')
         }
       } else {
-        toast.error('Error', 'Failed to load requests')
+        throw new Error(`HTTP ${res.status}`)
       }
 
       // Load quota
@@ -129,9 +153,25 @@ export default function TrackRequestPage() {
         setQuota(quotaData)
       }
     } catch (err) {
-      console.error(err)
-      toast.error('Error', 'Failed to load requests. Please try again.')
+      console.error('Fetch error:', err)
+      retryCountRef.current++
+
+      if (retryCountRef.current < MAX_RETRIES) {
+        // Exponential backoff retry
+        const delay = RETRY_DELAY * retryCountRef.current
+        console.log(`Retrying in ${delay}ms (attempt ${retryCountRef.current})`)
+        setTimeout(() => {
+          isFetchingRef.current = false
+          handleSearchForEmail(searchEmail, true)
+        }, delay)
+        return // Don't setLoading(false) yet, we're retrying
+      } else {
+        toast.error('Error', 'Failed to load requests. Please try again.')
+        setRequests([])
+        setQuota(null)
+      }
     } finally {
+      isFetchingRef.current = false
       setLoading(false)
     }
   }, [toast])
@@ -140,15 +180,28 @@ export default function TrackRequestPage() {
   useEffect(() => {
     if (user && userRole === 'customer') {
       setEmail(user.email || '')
-      // Auto-search for customers
-      if (user.email) {
+      // Auto-search for customers only once per user
+      if (user.email && !hasAttemptedFetchRef.current) {
+        hasAttemptedFetchRef.current = true
         handleSearchForEmail(user.email)
+      }
+    }
+
+    // Reset when user changes (logout/login)
+    return () => {
+      if (!user) {
+        hasAttemptedFetchRef.current = false
+        retryCountRef.current = 0
+        isFetchingRef.current = false
       }
     }
   }, [user, userRole, handleSearchForEmail])
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault()
+    // Reset retry count for manual searches
+    retryCountRef.current = 0
+    hasAttemptedFetchRef.current = true
     handleSearchForEmail(email)
   }, [email, handleSearchForEmail])
 
