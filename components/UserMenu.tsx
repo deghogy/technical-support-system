@@ -26,6 +26,13 @@ export default function UserMenu({ user, role, name }: { user?: any; role?: stri
     setLoggingOut(true)
 
     try {
+      // First, call server-side logout to clear cookies
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      // Then clear client-side state
       await signOut()
 
       // Force a full page reload to clear all state and cache

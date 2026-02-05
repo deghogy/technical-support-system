@@ -25,23 +25,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string, retryCount = 0) => {
     try {
       // Add timeout to profile fetch to prevent hanging
       const fetchPromise = supabase
         .from('profiles')
         .select('role, name')
         .eq('id', userId)
+        .maybeSingle() // Use maybeSingle instead of single to avoid errors if no profile
 
       const timeoutPromise = new Promise<null>((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 8000) // Increased to 8s
       )
 
-      const { data: profile } = await Promise.race([fetchPromise, timeoutPromise])
-      setRole(profile?.role ?? null)
-      setName(profile?.name ?? null)
+      const profile = await Promise.race([fetchPromise, timeoutPromise])
+
+      // Handle potential error from supabase
+      if (profile && 'error' in profile && profile.error) {
+        throw profile.error
+      }
+
+      const data = profile && 'data' in profile ? profile.data : null
+      setRole(data?.role ?? null)
+      setName(data?.name ?? null)
     } catch (error) {
       console.warn('Failed to fetch profile:', error)
+
+      // Retry once if this is the first attempt
+      if (retryCount < 1) {
+        console.log('Retrying profile fetch...')
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1s before retry
+        return fetchProfile(userId, retryCount + 1)
+      }
+
+      // After retry, set default role based on user metadata if available
       setRole(null)
       setName(null)
     }
