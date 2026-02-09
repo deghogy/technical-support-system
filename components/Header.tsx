@@ -2,21 +2,29 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import UserMenu from '@/components/UserMenu'
 import { useAuth } from '@/components/contexts/AuthProvider'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const { user, role: userRole, name: userName, loading } = useAuth()
   const pathname = usePathname()
+
+  // Prevent hydration mismatch - only render auth-dependent UI after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Don't show header on login page
   if (pathname === '/login') {
     return null
   }
 
+  // Build nav links based on auth state
+  // Don't show "Sign In" while loading to prevent flash of wrong state
   const navLinks = []
   if (user && userRole === 'admin') {
     navLinks.push(
@@ -38,23 +46,32 @@ export default function Header() {
       { href: '/track-request', label: 'Track Request' },
       { href: '/customer/locations', label: 'My Locations' }
     )
-  } else {
-    // Guest users (not logged in) - only Sign In
+  } else if (!loading && !user) {
+    // Only show Sign In when we're sure user is not logged in
     navLinks.push(
       { href: '/login', label: 'Sign In' }
     )
   }
+  // While loading, show no nav links (or could show a loading placeholder)
 
   return (
-    <header
-      style={{
-        background: '#0077C8',
-        borderBottom: '1px solid #005FA3',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}
-    >
+    <>
+      {/* Keyframes for loading animation */}
+      <style jsx global>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.8; }
+        }
+      `}</style>
+      <header
+        style={{
+          background: '#0077C8',
+          borderBottom: '1px solid #005FA3',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+        }}
+      >
       <div
         className="container"
         style={{
@@ -118,8 +135,21 @@ export default function Header() {
             </Link>
           ))}
 
-          <div style={{ marginLeft: '8px' }}>
-            <UserMenu user={user} role={userRole || undefined} name={userName || undefined} />
+          <div style={{ marginLeft: '8px', minWidth: '44px' }}>
+            {loading || !mounted ? (
+              // Loading placeholder - prevents layout shift
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.1)',
+                  animation: 'pulse 1.5s ease-in-out infinite',
+                }}
+              />
+            ) : (
+              <UserMenu user={user} role={userRole || undefined} name={userName || undefined} />
+            )}
           </div>
         </nav>
 
@@ -176,10 +206,13 @@ export default function Header() {
             </Link>
           ))}
           <div style={{ padding: '12px 0' }}>
-            <UserMenu user={user} role={userRole || undefined} name={userName || undefined} />
+            {!loading && mounted && (
+              <UserMenu user={user} role={userRole || undefined} name={userName || undefined} />
+            )}
           </div>
         </div>
       )}
     </header>
+    </>
   )
 }
