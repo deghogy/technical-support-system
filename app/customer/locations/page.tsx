@@ -23,15 +23,33 @@ export default function CustomerLocationsPage() {
   const [fetchLoading, setFetchLoading] = useState(true)
   const { toasts, toast, removeToast } = useToast()
 
-  // Redirect if not customer
+  // Redirect if not customer - wait for both user and role to be determined
   useEffect(() => {
-    if (!authLoading && user) {
-      if (role === 'admin' || role === 'approver') {
-        router.push('/admin/dashboard')
-      } else if (role !== 'customer') {
-        router.push('/login')
-      }
-    } else if (!authLoading && !user) {
+    // Don't redirect while still loading auth state
+    if (authLoading) return
+
+    // If no user, redirect to login
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    // If user exists but role is not yet loaded, wait (don't redirect yet)
+    if (role === null) {
+      // Give it a small grace period for role to load from cache
+      const timeoutId = setTimeout(() => {
+        // After grace period, if role is still null, redirect
+        if (role === null) {
+          router.push('/login')
+        }
+      }, 500)
+      return () => clearTimeout(timeoutId)
+    }
+
+    // Now we have both user and role, check authorization
+    if (role === 'admin' || role === 'approver') {
+      router.push('/admin/dashboard')
+    } else if (role !== 'customer') {
       router.push('/login')
     }
   }, [user, role, authLoading, router])

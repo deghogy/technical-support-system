@@ -104,10 +104,20 @@ export default function TrackRequestPage() {
   const retryCountRef = useRef(0)
   const hasAttemptedFetchRef = useRef(false)
 
-  // Redirect if not logged in
+  // Redirect if not logged in - wait for auth to fully initialize
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
+    // Don't redirect while still loading auth state
+    if (authLoading) return
+
+    // Only redirect if we're sure there's no user
+    if (!user) {
+      // Add a small grace period to prevent race condition
+      const timeoutId = setTimeout(() => {
+        if (!user) {
+          router.push('/login')
+        }
+      }, 300)
+      return () => clearTimeout(timeoutId)
     }
   }, [user, authLoading, router])
 
