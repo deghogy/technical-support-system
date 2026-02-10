@@ -346,6 +346,7 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        )}
 
           {/* Right Column - Quota by Location (Top 3 Only) */}
           <div>

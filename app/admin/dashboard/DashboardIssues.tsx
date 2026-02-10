@@ -107,7 +107,7 @@ export default function DashboardIssues({ initialIssues }: DashboardIssuesProps)
           Issue Log Overview
         </h1>
         <p style={{ fontSize: '14px', color: '#64748B', margin: 0 }}>
-          Track issue lifecycle from receipt to resolution
+          Track issue by realtime
         </p>
       </div>
 
