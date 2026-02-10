@@ -120,13 +120,14 @@ export default async function DashboardPage() {
         {/* Stats Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
           {/* Pending - Amber/Warning */}
-          <div className="card" style={{
+          <div style={{
             padding: '16px',
             background: pending && pending > 0
               ? 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)'
               : 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
             border: `1px solid ${pending && pending > 0 ? '#FDE68A' : '#BBF7D0'}`,
             borderLeft: `4px solid ${pending && pending > 0 ? '#F59E0B' : '#22C55E'}`,
+            borderRadius: '10px',
           }}>
             <p style={{
               fontSize: '11px',
@@ -163,11 +164,12 @@ export default async function DashboardPage() {
           </div>
 
           {/* Approved - Blue/Info */}
-          <div className="card" style={{
+          <div style={{
             padding: '16px',
             background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
             border: '1px solid #BFDBFE',
             borderLeft: '4px solid #3B82F6',
+            borderRadius: '10px',
           }}>
             <p style={{ fontSize: '11px', fontWeight: 600, color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 8px 0' }}>
               Approved
@@ -181,11 +183,12 @@ export default async function DashboardPage() {
           </div>
 
           {/* Completed - Green/Success */}
-          <div className="card" style={{
+          <div style={{
             padding: '16px',
             background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
             border: '1px solid #BBF7D0',
             borderLeft: '4px solid #22C55E',
+            borderRadius: '10px',
           }}>
             <p style={{ fontSize: '11px', fontWeight: 600, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 8px 0' }}>
               Completed
@@ -227,9 +230,16 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                maxHeight: '320px',
+                overflowY: 'auto',
+                paddingRight: '8px'
+              }}>
                 {scheduledVisits.map((visit: any) => (
-                  <div key={visit.id} className="card" style={{ padding: '16px' }}>
+                  <div key={visit.id} className="card" style={{ padding: '16px', flexShrink: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
@@ -299,11 +309,18 @@ export default async function DashboardPage() {
                 </p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                maxHeight: '320px',
+                overflowY: 'auto',
+                paddingRight: '8px'
+              }}>
                 {(() => {
                   const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
                   return quotaList.map((q) => (
-                    <div key={q.id} className="card" style={{ padding: '12px 14px' }}>
+                    <div key={q.id} className="card" style={{ padding: '12px 14px', flexShrink: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                         <span style={{
                           fontSize: '14px',

@@ -101,13 +101,14 @@ export default function DashboardIssues({ initialIssues }: DashboardIssuesProps)
 
   return (
     <div style={{ marginBottom: '32px' }}>
-      {/* Section Divider */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-        <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
-        <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      {/* Section Header - Same format as Service Contract Active */}
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>
           Issue Log Overview
-        </span>
-        <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }} />
+        </h1>
+        <p style={{ fontSize: '14px', color: '#64748B', margin: 0 }}>
+          Track issue lifecycle from receipt to resolution
+        </p>
       </div>
 
       {/* Issues Workflow Stats Cards */}
