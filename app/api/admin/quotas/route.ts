@@ -128,3 +128,77 @@ export async function POST(req: NextRequest) {
     )
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const roleCheck = await requireRole(['admin'])
+    if (roleCheck.error) {
+      return NextResponse.json({ message: roleCheck.error }, { status: roleCheck.status })
+    }
+
+    const body = await req.json()
+    const { id, usedHours } = body
+
+    if (!id || usedHours === undefined) {
+      return NextResponse.json(
+        { message: 'Missing id or usedHours' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = await createSupabaseRouteClient()
+
+    // Get current quota to check against total
+    const { data: currentQuota, error: fetchError } = await supabase
+      .from('customer_quotas')
+      .select('total_hours, customer_email')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !currentQuota) {
+      logger.error({ fetchError }, 'Failed to fetch quota for update')
+      return NextResponse.json(
+        { message: 'Quota not found' },
+        { status: 404 }
+      )
+    }
+
+    // Validate used hours doesn't exceed total
+    if (usedHours > currentQuota.total_hours) {
+      return NextResponse.json(
+        { message: 'Used hours cannot exceed total hours' },
+        { status: 400 }
+      )
+    }
+
+    // Update used hours
+    const { error } = await supabase
+      .from('customer_quotas')
+      .update({
+        used_hours: usedHours,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+
+    if (error) {
+      logger.error({ error }, 'Failed to update used hours')
+      return NextResponse.json(
+        { message: 'Failed to update used hours' },
+        { status: 500 }
+      )
+    }
+
+    logger.info({ id, usedHours, customerEmail: currentQuota.customer_email }, 'Used hours updated')
+
+    return NextResponse.json({
+      success: true,
+      message: 'Used hours updated successfully',
+    })
+  } catch (error) {
+    logger.error({ error }, 'Unexpected error in quotas PATCH')
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

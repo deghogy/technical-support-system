@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from 'react'
 
+interface Quota {
+  id: string
+  customerEmail: string
+  totalHours: number
+  usedHours: number
+  availableHours: number
+}
+
 export default function QuotasPageClient() {
-  const [quotas, setQuotas] = useState<any[]>([])
+  const [quotas, setQuotas] = useState<Quota[]>([])
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -12,6 +20,10 @@ export default function QuotasPageClient() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [tab, setTab] = useState<'quotas' | 'logs'>('quotas')
+
+  // Editing state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
 
   useEffect(() => {
     loadData()
@@ -73,6 +85,55 @@ export default function QuotasPageClient() {
     }
   }
 
+  async function handleUpdateUsedHours(id: string, newUsedHours: number) {
+    setSaving(true)
+    setMessage('')
+
+    try {
+      const res = await fetch('/api/admin/quotas', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          usedHours: newUsedHours,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setMessage('✓ Used hours updated')
+        await loadData()
+      } else {
+        setMessage(data.message || 'Failed to update used hours')
+      }
+    } catch (error) {
+      console.error(error)
+      setMessage('Error updating used hours')
+    } finally {
+      setSaving(false)
+      setEditingId(null)
+    }
+  }
+
+  function startEditing(quota: Quota) {
+    setEditingId(quota.id)
+    setEditValue(quota.usedHours.toString())
+  }
+
+  function cancelEditing() {
+    setEditingId(null)
+    setEditValue('')
+  }
+
+  function saveEditing(id: string) {
+    const newValue = parseInt(editValue, 10)
+    if (isNaN(newValue) || newValue < 0) {
+      setMessage('Please enter a valid number')
+      return
+    }
+    handleUpdateUsedHours(id, newValue)
+  }
 
   return (
     <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
@@ -239,7 +300,81 @@ export default function QuotasPageClient() {
                     <tr key={quota.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                       <td style={{ padding: '16px', fontSize: '14px', color: '#0F172A' }}>{quota.customerEmail}</td>
                       <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0077C8' }}>{quota.totalHours}h</td>
-                      <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px', color: '#475569' }}>{quota.usedHours}h</td>
+                      <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px', color: '#475569' }}>
+                        {editingId === quota.id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            <input
+                              type="number"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              min="0"
+                              max={quota.totalHours}
+                              autoFocus
+                              style={{
+                                width: '70px',
+                                padding: '6px 8px',
+                                textAlign: 'center',
+                                margin: 0,
+                                fontSize: '14px'
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveEditing(quota.id)
+                                if (e.key === 'Escape') cancelEditing()
+                              }}
+                            />
+                            <button
+                              onClick={() => saveEditing(quota.id)}
+                              disabled={saving}
+                              style={{
+                                padding: '6px 10px',
+                                fontSize: '12px',
+                                minHeight: '32px'
+                              }}
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={cancelEditing}
+                              style={{
+                                padding: '6px 10px',
+                                fontSize: '12px',
+                                background: '#F1F5F9',
+                                color: '#475569',
+                                minHeight: '32px'
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => startEditing(quota)}
+                            style={{
+                              cursor: 'pointer',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              background: '#F8FAFC',
+                              border: '1px solid #E2E8F0',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#EAF3FB'
+                              e.currentTarget.style.borderColor = '#0077C8'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#F8FAFC'
+                              e.currentTarget.style.borderColor = '#E2E8F0'
+                            }}
+                            title="Click to edit used hours"
+                          >
+                            <span>{quota.usedHours}h</span>
+                            <span style={{ fontSize: '12px', color: '#64748B' }}>✎</span>
+                          </div>
+                        )}
+                      </td>
                       <td style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 600, color: quota.availableHours === 0 ? '#DC2626' : '#22C55E' }}>
                         {quota.availableHours}h
                       </td>
@@ -260,6 +395,21 @@ export default function QuotasPageClient() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Message display outside table */}
+              {message && !showForm && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  background: message.includes('✓') ? '#F0FDF4' : '#FEF2F2',
+                  color: message.includes('✓') ? '#166534' : '#DC2626',
+                  fontSize: '14px',
+                  fontWeight: 500
+                }}>
+                  {message}
+                </div>
+              )}
             </div>
           )}
         </div>

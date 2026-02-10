@@ -121,21 +121,24 @@ export default function DashboardIssues({ initialIssues }: DashboardIssuesProps)
           borderLeft: '4px solid #64748B',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px'
+          justifyContent: 'space-between',
+          minHeight: '80px'
         }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
-            background: '#64748B',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '20px'
-          }}>📋</div>
-          <div>
-            <p style={{ fontSize: '11px', fontWeight: 600, color: '#475569', margin: '0 0 2px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Issue Received</p>
-            <p style={{ fontSize: '24px', fontWeight: 700, color: '#334155', margin: 0 }}>{stats.total}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#64748B',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>📋</div>
+            <div>
+              <p style={{ fontSize: '11px', fontWeight: 600, color: '#475569', margin: '0 0 2px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Issue Received</p>
+              <p style={{ fontSize: '24px', fontWeight: 700, color: '#334155', margin: 0 }}>{stats.total}</p>
+            </div>
           </div>
         </div>
 
@@ -150,7 +153,8 @@ export default function DashboardIssues({ initialIssues }: DashboardIssuesProps)
           borderLeft: stats.firstResponsed < stats.total ? '4px solid #EF4444' : '4px solid #3B82F6',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          minHeight: '80px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -195,7 +199,8 @@ export default function DashboardIssues({ initialIssues }: DashboardIssuesProps)
           borderLeft: stats.planned < stats.firstResponsed ? '4px solid #EF4444' : '4px solid #F59E0B',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          minHeight: '80px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -238,21 +243,24 @@ export default function DashboardIssues({ initialIssues }: DashboardIssuesProps)
           borderLeft: '4px solid #22C55E',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px'
+          justifyContent: 'space-between',
+          minHeight: '80px'
         }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
-            background: '#22C55E',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '20px'
-          }}>✅</div>
-          <div>
-            <p style={{ fontSize: '11px', fontWeight: 600, color: '#166534', margin: '0 0 2px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Completed</p>
-            <p style={{ fontSize: '24px', fontWeight: 700, color: '#16A34A', margin: 0 }}>{stats.completed}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: '#22C55E',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>✅</div>
+            <div>
+              <p style={{ fontSize: '11px', fontWeight: 600, color: '#166534', margin: '0 0 2px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Completed</p>
+              <p style={{ fontSize: '24px', fontWeight: 700, color: '#16A34A', margin: 0 }}>{stats.completed}</p>
+            </div>
           </div>
         </div>
       </div>

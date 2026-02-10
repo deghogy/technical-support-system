@@ -56,32 +56,6 @@ export default async function DashboardPage() {
     .is('actual_start_time', null)
     .order('scheduled_date', { ascending: true })
 
-  // Get conducted visits with actual times for accurate hours calculation
-  const { data: conductedVisits } = await supabase
-    .from('site_visit_requests')
-    .select('site_location, actual_start_time, actual_end_time, duration_hours')
-    .eq('visit_status', 'confirmed')
-
-  // Calculate actual hours worked and group by location
-  const hoursMap = new Map<string, number>()
-  conductedVisits?.forEach((item: any) => {
-    const location = item.site_location || 'Unknown'
-    // Use actual hours if available, fall back to planned duration_hours
-    let hours = item.duration_hours || 0
-    if (item.actual_start_time && item.actual_end_time) {
-      const start = new Date(item.actual_start_time).getTime()
-      const end = new Date(item.actual_end_time).getTime()
-      hours = Math.floor((end - start) / (1000 * 60 * 60))
-    }
-    hoursMap.set(location, (hoursMap.get(location) || 0) + hours)
-  })
-
-  const conductedByLocationArray = Array.from(hoursMap.entries())
-    .map(([location, hours]) => ({ location, hours }))
-    .sort((a, b) => b.hours - a.hours)
-
-  const totalHours = conductedByLocationArray.reduce((sum, item) => sum + item.hours, 0)
-
   // Fetch issues for the dashboard
   const { data: issues } = await supabase
     .from('issue_log')
@@ -265,145 +239,82 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Right Column - Location (formerly Customer Quotas) & Hours by Location */}
+        {/* Right Column - Quota by location (formerly Location) */}
         <div>
-          {/* Hours by Location - First (smaller) */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
-                Hours by Location
-              </h2>
-              {totalHours > 0 && (
-                <span style={{ fontSize: '13px', color: '#64748B' }}>
-                  Total: {totalHours}h
-                </span>
-              )}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+              Quota by location
+            </h2>
+            {quotaList.length > 0 && (
+              <span style={{ fontSize: '12px', color: '#64748B' }}>
+                {quotaSummary.used}h / {quotaSummary.total}h
+              </span>
+            )}
+          </div>
+
+          {quotaList.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
+              <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
+                No quotas configured
+              </p>
             </div>
-
-            {conductedByLocationArray.length === 0 ? (
-              <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
-                <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
-                  No conducted visits yet
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {(() => {
-                  const maxHours = Math.max(...conductedByLocationArray.map(x => x.hours), 20)
-                  return conductedByLocationArray.map((item) => (
-                    <div key={item.location} className="card" style={{ padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#0F172A' }}>
-                          {item.location}
-                        </span>
-                        <span style={{ fontSize: '15px', fontWeight: 700, color: '#0077C8' }}>
-                          {item.hours}h
-                        </span>
-                      </div>
-
-                      <div style={{
-                        width: '100%',
-                        height: '6px',
-                        background: '#EAF3FB',
-                        borderRadius: '3px',
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {(() => {
+                const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
+                return quotaList.map((q) => (
+                  <div key={q.email} className="card" style={{ padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        color: '#0F172A',
                         overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '60%'
                       }}>
-                        <div style={{
-                          height: '100%',
-                          width: `${(item.hours / maxHours) * 100}%`,
-                          background: '#0077C8',
-                          borderRadius: '3px',
-                          transition: 'width 0.3s ease',
-                        }} />
-                      </div>
+                        {q.email}
+                      </span>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#7C3AED' }}>
+                        {q.available}h <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 400 }}>avail</span>
+                      </span>
+                    </div>
 
-                      <p style={{ fontSize: '11px', color: '#64748B', margin: '6px 0 0 0' }}>
-                        {Math.round((item.hours / totalHours) * 100)}% of total hours
+                    <div style={{
+                      width: '100%',
+                      height: '6px',
+                      background: '#F3E8FF',
+                      borderRadius: '3px',
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${(q.used / maxTotal) * 100}%`,
+                        background: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6',
+                        borderRadius: '3px',
+                        transition: 'width 0.3s ease',
+                      }} />
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <p style={{ fontSize: '11px', color: '#64748B', margin: 0 }}>
+                        {q.used}h used of {q.total}h
+                      </p>
+                      <p style={{
+                        fontSize: '11px',
+                        color: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6',
+                        margin: 0,
+                        fontWeight: 500
+                      }}>
+                        {q.percentage}%
                       </p>
                     </div>
-                  ))
-                })()}
-              </div>
-            )}
-          </div>
-
-          {/* Location Section - Second (compact, formerly Customer Quotas) */}
-          <div style={{ marginTop: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
-                Location
-              </h2>
-              {quotaList.length > 0 && (
-                <span style={{ fontSize: '12px', color: '#64748B' }}>
-                  {quotaSummary.used}h / {quotaSummary.total}h
-                </span>
-              )}
+                  </div>
+                ))
+              })()}
             </div>
-
-            {quotaList.length === 0 ? (
-              <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
-                <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
-                  No quotas configured
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {(() => {
-                  const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
-                  return quotaList.map((q) => (
-                    <div key={q.email} className="card" style={{ padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <span style={{
-                          fontSize: '13px',
-                          fontWeight: 500,
-                          color: '#0F172A',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: '60%'
-                        }}>
-                          {q.email}
-                        </span>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#7C3AED' }}>
-                          {q.available}h <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 400 }}>avail</span>
-                        </span>
-                      </div>
-
-                      <div style={{
-                        width: '100%',
-                        height: '6px',
-                        background: '#F3E8FF',
-                        borderRadius: '3px',
-                        overflow: 'hidden',
-                      }}>
-                        <div style={{
-                          height: '100%',
-                          width: `${(q.used / maxTotal) * 100}%`,
-                          background: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6',
-                          borderRadius: '3px',
-                          transition: 'width 0.3s ease',
-                        }} />
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                        <p style={{ fontSize: '11px', color: '#64748B', margin: 0 }}>
-                          {q.used}h used of {q.total}h
-                        </p>
-                        <p style={{
-                          fontSize: '11px',
-                          color: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6',
-                          margin: 0,
-                          fontWeight: 500
-                        }}>
-                          {q.percentage}%
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                })()}
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </main>
