@@ -32,7 +32,8 @@ export default function Header() {
       { href: '/admin/approvals', label: 'Approvals' },
       { href: '/admin/visits', label: 'Visits' },
       { href: '/admin/history', label: 'History' },
-      { href: '/admin/quotas', label: 'Quotas' }
+      { href: '/admin/quotas', label: 'Quotas' },
+      { href: '/admin/issues', label: 'Issues' }
     )
   } else if (user && userRole === 'approver') {
     navLinks.push(
@@ -51,6 +52,14 @@ export default function Header() {
     navLinks.push(
       { href: '/login', label: 'Sign In' }
     )
+  }
+
+  // Helper to check if a link is active
+  const isActive = (href: string) => {
+    if (href === '/admin/dashboard') {
+      return pathname === href || pathname === '/admin'
+    }
+    return pathname === href || pathname.startsWith(href + '/')
   }
   // While loading, show no nav links (or could show a loading placeholder)
 
@@ -117,23 +126,28 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="desktop-nav" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              style={{
-                color: 'rgba(255,255,255,0.9)',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                padding: '8px 12px',
-                borderRadius: '6px',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href)
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                style={{
+                  color: active ? '#FFFFFF' : 'rgba(255,255,255,0.85)',
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  fontWeight: active ? 600 : 500,
+                  padding: '8px 14px',
+                  borderRadius: '6px',
+                  transition: 'all 0.15s ease',
+                  background: active ? 'rgba(255,255,255,0.2)' : 'transparent',
+                  border: active ? '1px solid rgba(255,255,255,0.3)' : '1px solid transparent',
+                }}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
 
           <div style={{ marginLeft: '8px', minWidth: '44px' }}>
             {loading || !mounted ? (
@@ -187,24 +201,30 @@ export default function Header() {
             borderTop: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileMenuOpen(false)}
-              style={{
-                display: 'block',
-                color: '#FFFFFF',
-                textDecoration: 'none',
-                fontSize: '15px',
-                fontWeight: 500,
-                padding: '12px 0',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href)
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  color: '#FFFFFF',
+                  textDecoration: 'none',
+                  fontSize: '15px',
+                  fontWeight: active ? 600 : 500,
+                  padding: '12px 0',
+                  borderBottom: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                {link.label}
+                {active && <span style={{ fontSize: '12px' }}>●</span>}
+              </Link>
+            )
+          })}
           <div style={{ padding: '12px 0' }}>
             {!loading && mounted && (
               <UserMenu user={user} role={userRole || undefined} name={userName || undefined} />
