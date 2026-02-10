@@ -346,9 +346,10 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-          {/* Right Column - Quota by Location (Top 3 Only) */}
+      {/* Right Column - Quota by Location (Top 3 Only) */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
