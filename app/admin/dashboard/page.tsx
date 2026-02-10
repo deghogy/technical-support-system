@@ -1,120 +1,135 @@
-import { createSupabaseServerClient } from '@/lib/supabaseServer'
+'use client'
+
+import { useEffect, useState } from 'react'
 import { formatDateOnlyGMT7 } from '@/lib/dateFormatter'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import DashboardIssues from './DashboardIssues'
 
-export default async function DashboardPage() {
-  const supabase = await createSupabaseServerClient()
+interface Quota {
+  id: string
+  email: string
+  location: string
+  total: number
+  used: number
+  available: number
+  percentage: number
+}
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+interface ScheduledVisit {
+  id: string
+  requester_name: string
+  requester_email: string
+  site_location: string
+  problem_desc: string
+  scheduled_date: string
+}
 
-  if (!user) redirect('/login')
+interface DashboardData {
+  pending: number
+  approved: number
+  confirmed: number
+  quotaList: Quota[]
+  quotaSummary: { total: number; used: number }
+  scheduledVisits: ScheduledVisit[]
+  issues: any[]
+}
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+export default function DashboardPage() {
+  const router = useRouter()
+  const [data, setData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [visitsExpanded, setVisitsExpanded] = useState(false)
 
-  if (!['admin', 'approver'].includes(profile?.role ?? '')) redirect('/')
-
-  // Get counts
-  const [{ count: pending }, { count: approved }, { count: confirmed }] = await Promise.all([
-    supabase.from('site_visit_requests').select('id', { count: 'exact' }).eq('status', 'pending'),
-    supabase.from('site_visit_requests').select('id', { count: 'exact' }).eq('status', 'approved'),
-    supabase.from('site_visit_requests').select('id', { count: 'exact' }).eq('visit_status', 'confirmed'),
-  ])
-
-  // Get quotas with location names - join with site_visit_requests to get location
-  const { data: quotas } = await supabase
-    .from('customer_quotas')
-    .select('id, customer_email, total_hours, used_hours')
-    .order('used_hours', { ascending: false })
-
-  // Get unique locations for each customer from their visit requests
-  const { data: customerLocations } = await supabase
-    .from('site_visit_requests')
-    .select('requester_email, site_location')
-    .not('site_location', 'is', null)
-
-  // Build a map of customer email -> primary location (most used)
-  const locationMap = new Map<string, string>()
-  const locationCount = new Map<string, Map<string, number>>()
-
-  customerLocations?.forEach((visit: any) => {
-    const email = visit.requester_email?.toLowerCase()
-    const location = visit.site_location
-    if (!email || !location) return
-
-    if (!locationCount.has(email)) {
-      locationCount.set(email, new Map())
-    }
-    const counts = locationCount.get(email)!
-    counts.set(location, (counts.get(location) || 0) + 1)
-  })
-
-  // Get the most frequent location for each customer
-  locationCount.forEach((counts, email) => {
-    let maxCount = 0
-    let primaryLocation = email.split('@')[0] // fallback to email username
-    counts.forEach((count, location) => {
-      if (count > maxCount) {
-        maxCount = count
-        primaryLocation = location
+  // Fetch dashboard data
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/admin/dashboard')
+      if (res.ok) {
+        const dashboardData = await res.json()
+        setData(dashboardData)
       }
-    })
-    locationMap.set(email, primaryLocation)
-  })
-
-  const quotaList = quotas?.map(q => {
-    const location = locationMap.get(q.customer_email.toLowerCase()) || q.customer_email.split('@')[0]
-    return {
-      id: q.id,
-      email: q.customer_email,
-      location: location,
-      total: q.total_hours || 0,
-      used: q.used_hours || 0,
-      available: (q.total_hours || 0) - (q.used_hours || 0),
-      percentage: (q.total_hours || 0) > 0 ? Math.round(((q.used_hours || 0) / q.total_hours) * 100) : 0,
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error)
+    } finally {
+      setLoading(false)
     }
-  }) || []
+  }
 
-  const quotaSummary = quotas?.reduce((acc, q) => ({
-    total: acc.total + (q.total_hours || 0),
-    used: acc.used + (q.used_hours || 0),
-  }), { total: 0, used: 0 }) || { total: 0, used: 0 }
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-  // Get scheduled visits that haven't been recorded yet
-  const { data: scheduledVisits } = await supabase
-    .from('site_visit_requests')
-    .select('*')
-    .eq('status', 'approved')
-    .not('scheduled_date', 'is', null)
-    .is('actual_start_time', null)
-    .order('scheduled_date', { ascending: true })
+  // Auto refresh every 10 seconds when enabled
+  useEffect(() => {
+    if (!autoRefresh) return
 
-  // Fetch issues for the dashboard
-  const { data: issues } = await supabase
-    .from('issue_log')
-    .select('*')
-    .order('entry_issue_date', { ascending: false })
+    const interval = setInterval(() => {
+      fetchData()
+      router.refresh()
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [autoRefresh, router])
+
+  if (loading || !data) {
+    return (
+      <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1200px' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
+          <p style={{ color: '#64748B', margin: 0 }}>Loading dashboard...</p>
+        </div>
+      </main>
+    )
+  }
+
+  const { pending, approved, confirmed, quotaList, quotaSummary, scheduledVisits, issues } = data
+
+  // Get top 3 quotas by usage percentage
+  const topQuotas = quotaList.slice(0, 3)
 
   return (
     <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1200px' }}>
 
       {/* ========== SECTION 1: SERVICE CONTRACT ACTIVE ========== */}
       <section style={{ marginBottom: '48px' }}>
-        {/* Section Header */}
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>
-            Service Contract Active
-          </h1>
-          <p style={{ fontSize: '14px', color: '#64748B', margin: 0 }}>
-            Technical support operations overview and scheduled visits
-          </p>
+        {/* Section Header with Auto-Refresh Toggle */}
+        <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontSize: '26px', fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>
+              Service Contract Active
+            </h1>
+            <p style={{ fontSize: '14px', color: '#64748B', margin: 0 }}>
+              Technical support operations overview and scheduled visits
+            </p>
+          </div>
+          <button
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${autoRefresh ? '#22C55E' : '#D0D7E2'}`,
+              background: autoRefresh ? '#F0FDF4' : '#FFFFFF',
+              color: autoRefresh ? '#166534' : '#475569',
+              fontSize: '13px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            title={autoRefresh ? 'Auto-refresh every 10 seconds (ON)' : 'Auto-refresh every 10 seconds (OFF)'}
+          >
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: autoRefresh ? '#22C55E' : '#94A3B8',
+              animation: autoRefresh ? 'pulse 2s infinite' : 'none',
+            }} />
+            {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
+          </button>
         </div>
 
         {/* Stats Cards */}
@@ -204,42 +219,85 @@ export default async function DashboardPage() {
 
         {/* Two Column Layout: Visits + Quota */}
         <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
-          {/* Left Column - Scheduled Visits */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
-                Upcoming Scheduled Visits
-              </h2>
-              {scheduledVisits && scheduledVisits.length > 0 && (
-                <span style={{ fontSize: '13px', color: '#64748B' }}>
-                  {scheduledVisits.length} visit{scheduledVisits.length !== 1 ? 's' : ''}
-                </span>
-              )}
+          {/* Left Column - Scheduled Visits - Collapsible */}
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            {/* Header - Always Visible */}
+            <div
+              onClick={() => setVisitsExpanded(!visitsExpanded)}
+              style={{
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                background: visitsExpanded ? '#F8FAFC' : 'transparent',
+                borderBottom: visitsExpanded ? '1px solid #E2E8F0' : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '16px' }}>📅</span>
+                <span style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A' }}>Upcoming Scheduled Visits</span>
+                {scheduledVisits && scheduledVisits.length > 0 && (
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#64748B',
+                    background: '#F1F5F9',
+                    padding: '2px 10px',
+                    borderRadius: '12px'
+                  }}>
+                    {scheduledVisits.length}
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {!visitsExpanded && scheduledVisits.length > 0 && (
+                  <span style={{ fontSize: '12px', color: '#64748B' }}>
+                    Next: {formatDateOnlyGMT7(scheduledVisits[0].scheduled_date)}
+                  </span>
+                )}
+                <span style={{
+                  fontSize: '14px',
+                  color: '#64748B',
+                  transform: visitsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }}>▼</span>
+              </div>
             </div>
 
-            {!scheduledVisits || scheduledVisits.length === 0 ? (
-              <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-                <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
-                  No scheduled visits at this time
-                </p>
-                <Link
-                  href="/admin/approvals"
-                  style={{ fontSize: '14px', color: '#0077C8', textDecoration: 'none', marginTop: '12px', display: 'inline-block' }}
-                >
-                  Review pending requests →
-                </Link>
-              </div>
-            ) : (
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                maxHeight: '320px',
-                overflowY: 'auto',
-                paddingRight: '8px'
-              }}>
-                {scheduledVisits.map((visit: any) => (
-                  <div key={visit.id} className="card" style={{ padding: '16px', flexShrink: 0 }}>
+            {/* Expandable Content */}
+            {visitsExpanded && (
+              <div style={{ padding: '16px 20px' }}>
+                {!scheduledVisits || scheduledVisits.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '32px 24px' }}>
+                    <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>
+                      No scheduled visits at this time
+                    </p>
+                    <Link
+                      href="/admin/approvals"
+                      style={{ fontSize: '14px', color: '#0077C8', textDecoration: 'none', marginTop: '12px', display: 'inline-block' }}
+                    >
+                      Review pending requests →
+                    </Link>
+                  </div>
+                ) : (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    maxHeight: '320px',
+                    overflowY: 'auto',
+                    paddingRight: '8px'
+                  }}
+                  >
+                    {scheduledVisits.map((visit) => (
+                      <div key={visit.id} style={{
+                        padding: '16px',
+                        background: '#FAFBFC',
+                        border: '1px solid #E2E8F0',
+                        borderRadius: '8px',
+                        flexShrink: 0
+                      }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
@@ -289,7 +347,7 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          {/* Right Column - Quota by Location */}
+          {/* Right Column - Quota by Location (Top 3 Only) */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>
@@ -297,7 +355,7 @@ export default async function DashboardPage() {
               </h2>
               {quotaList.length > 0 && (
                 <span style={{ fontSize: '12px', color: '#64748B' }}>
-                  {quotaSummary.used}h / {quotaSummary.total}h
+                  Top 3 • {quotaSummary.used}h / {quotaSummary.total}h
                 </span>
               )}
             </div>
@@ -312,14 +370,11 @@ export default async function DashboardPage() {
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
-                maxHeight: '320px',
-                overflowY: 'auto',
-                paddingRight: '8px'
+                gap: '8px'
               }}>
                 {(() => {
-                  const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
-                  return quotaList.map((q) => (
+                  const maxTotal = Math.max(...topQuotas.map(q => q.total), 20)
+                  return topQuotas.map((q) => (
                     <div key={q.id} className="card" style={{ padding: '12px 14px', flexShrink: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                         <span style={{
@@ -386,6 +441,13 @@ export default async function DashboardPage() {
         <DashboardIssues initialIssues={issues || []} />
       </section>
 
+      {/* Pulse Animation for Auto-refresh Indicator */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
     </main>
   )
 }
