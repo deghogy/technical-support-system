@@ -25,7 +25,7 @@ export async function GET() {
     // Get quotas
     const { data: quotas } = await supabase
       .from('customer_quotas')
-      .select('id, customer_email, total_hours, used_hours')
+      .select('id, customer_email, customer_name, total_hours, used_hours')
       .order('used_hours', { ascending: false })
 
     // Get unique locations for each customer from their visit requests
@@ -68,6 +68,7 @@ export async function GET() {
       return {
         id: q.id,
         email: q.customer_email,
+        customerName: q.customer_name || location,
         location: location,
         total: q.total_hours || 0,
         used: q.used_hours || 0,

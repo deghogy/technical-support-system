@@ -9,6 +9,7 @@ import DashboardIssues from './DashboardIssues'
 interface Quota {
   id: string
   email: string
+  customerName: string
   location: string
   total: number
   used: number
@@ -292,7 +293,7 @@ export default function DashboardPage() {
                       return quotaList.map((q) => (
                         <div key={q.id} style={{ padding: '12px 14px', background: '#FAFBFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                            <span style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '50%' }}>{q.location}</span>
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '50%' }}>{q.customerName}</span>
                             <span style={{ fontSize: '13px', fontWeight: 600, color: '#7C3AED' }}>{q.available}h <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 400 }}>avail</span></span>
                           </div>
                           <div style={{ width: '100%', height: '6px', background: '#F3E8FF', borderRadius: '3px', overflow: 'hidden' }}>
