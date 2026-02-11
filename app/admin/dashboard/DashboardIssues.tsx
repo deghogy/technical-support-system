@@ -292,7 +292,7 @@ export default function DashboardIssues({ initialIssues }: DashboardIssuesProps)
               padding: '2px 10px',
               borderRadius: '12px'
             }}>
-              {filteredIssues.length} of {issues.length}
+              Total Issues: {issues.length}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

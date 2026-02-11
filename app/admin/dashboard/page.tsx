@@ -247,7 +247,7 @@ export default function DashboardPage() {
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>Quota by Location</h2>
+              <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>Customer Quota</h2>
               {quotaList.length > 0 && (
                 <span style={{ fontSize: '12px', color: '#64748B' }}>Top 3 • {quotaSummary.used}h / {quotaSummary.total}h</span>
               )}
