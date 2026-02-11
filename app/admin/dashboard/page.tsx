@@ -80,7 +80,6 @@ export default function DashboardPage() {
   }
 
   const { pending, approved, confirmed, quotaList, quotaSummary, scheduledVisits, issues } = data
-  const topQuotas = quotaList.slice(0, 3)
 
   return (
     <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1200px' }}>
@@ -249,7 +248,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>Customer Quota</h2>
               {quotaList.length > 0 && (
-                <span style={{ fontSize: '12px', color: '#64748B' }}>Top 3 • {quotaSummary.used}h / {quotaSummary.total}h</span>
+                <span style={{ fontSize: '12px', color: '#64748B' }}>{quotaSummary.used}h / {quotaSummary.total}h</span>
               )}
             </div>
 
@@ -258,10 +257,10 @@ export default function DashboardPage() {
                 <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>No quotas configured</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto', paddingRight: '8px' }}>
                 {(() => {
-                  const maxTotal = Math.max(...topQuotas.map(q => q.total), 20)
-                  return topQuotas.map((q) => (
+                  const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
+                  return quotaList.map((q) => (
                     <div key={q.id} className="card" style={{ padding: '12px 14px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                         <span style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '50%' }}>{q.location}</span>
