@@ -435,7 +435,7 @@ export default function CustomerRequestPage() {
             value={requestedDate}
             onChange={(e) => setRequestedDate(e.target.value)}
             required
-            min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+            min={new Date().toISOString().split('T')[0]}
             style={{
               width: '100%',
               padding: '10px 12px',

@@ -23,8 +23,8 @@ const createRequestSchema = z.object({
       const parsed = new Date(date)
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      return !isNaN(parsed.getTime()) && parsed > today
-    }, 'Requested date must be tomorrow or later'),
+      return !isNaN(parsed.getTime()) && parsed >= today
+    }, 'Requested date must be today or later'),
   support_type: z
     .enum(['remote', 'onsite'], {
       errorMap: () => ({ message: 'Support type must be remote or onsite' }),
@@ -90,20 +90,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify the location belongs to this customer (optional validation)
-    const { data: locationData } = await supabase
-      .from('customer_locations')
-      .select('id')
-      .eq('customer_id', user.id)
-      .eq('location_name', validatedData.site_location)
-      .single()
+    // Verify the location belongs to this customer (skip for remote support)
+    if (validatedData.support_type !== 'remote') {
+      const { data: locationData } = await supabase
+        .from('customer_locations')
+        .select('id')
+        .eq('customer_id', user.id)
+        .eq('location_name', validatedData.site_location)
+        .single()
 
-    if (!locationData) {
-      logger.warn({ userId: user.id, location: validatedData.site_location }, 'Invalid location submitted')
-      return NextResponse.json(
-        { message: 'Invalid location - Please select from your saved locations' },
-        { status: 400 }
-      )
+      if (!locationData) {
+        logger.warn({ userId: user.id, location: validatedData.site_location }, 'Invalid location submitted')
+        return NextResponse.json(
+          { message: 'Invalid location - Please select from your saved locations' },
+          { status: 400 }
+        )
+      }
     }
 
     // Check quota before allowing request

@@ -172,8 +172,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', alignItems: 'flex-start' }}>
+          <div className="card" style={{ padding: 0, overflow: 'hidden', height: visitsExpanded ? 'auto' : 'fit-content' }}>
             <div
               onClick={() => setVisitsExpanded(!visitsExpanded)}
               style={{
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                 <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>No quotas configured</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto', paddingRight: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '8px' }}>
                 {(() => {
                   const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
                   return quotaList.map((q) => (
