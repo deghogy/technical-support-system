@@ -285,15 +285,6 @@ export default function DashboardIssues({ initialIssues }: DashboardIssuesProps)
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '16px' }}>🔧</span>
             <span style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A' }}>Issue Details</span>
-            <span style={{
-              fontSize: '12px',
-              color: '#64748B',
-              background: '#F1F5F9',
-              padding: '2px 10px',
-              borderRadius: '12px'
-            }}>
-              Total Issues: {issues.length}
-            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Link
