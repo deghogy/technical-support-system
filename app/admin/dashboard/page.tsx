@@ -244,41 +244,54 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 600, color: '#0F172A', margin: 0 }}>Customer Quota</h2>
+          <div className="card" style={{ padding: 0, overflow: 'hidden', height: 'fit-content' }}>
+            {/* Header - Non-collapsible */}
+            <div style={{
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'transparent',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '16px' }}>📊</span>
+                <span style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A' }}>Customer Quota</span>
+              </div>
               {quotaList.length > 0 && (
                 <span style={{ fontSize: '12px', color: '#64748B' }}>{quotaSummary.used}h / {quotaSummary.total}h</span>
               )}
             </div>
 
-            {quotaList.length === 0 ? (
-              <div className="card" style={{ textAlign: 'center', padding: '24px' }}>
-                <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>No quotas configured</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '8px' }}>
-                {(() => {
-                  const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
-                  return quotaList.map((q) => (
-                    <div key={q.id} className="card" style={{ padding: '12px 14px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '50%' }}>{q.location}</span>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#7C3AED' }}>{q.available}h <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 400 }}>avail</span></span>
+            {/* Content */}
+            <div style={{ padding: '0 20px 16px 20px' }}>
+              {quotaList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px' }}>
+                  <p style={{ color: '#64748B', margin: 0, fontSize: '14px' }}>No quotas configured</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '8px' }}>
+                  {(() => {
+                    const maxTotal = Math.max(...quotaList.map(q => q.total), 20)
+                    return quotaList.map((q) => (
+                      <div key={q.id} style={{ padding: '12px 14px', background: '#FAFBFC', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '50%' }}>{q.location}</span>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#7C3AED' }}>{q.available}h <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 400 }}>avail</span></span>
+                        </div>
+                        <div style={{ width: '100%', height: '6px', background: '#F3E8FF', borderRadius: '3px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${(q.used / maxTotal) * 100}%`, background: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6', borderRadius: '3px' }} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                          <p style={{ fontSize: '11px', color: '#64748B', margin: 0 }}>{q.used}h used of {q.total}h</p>
+                          <p style={{ fontSize: '11px', color: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6', margin: 0, fontWeight: 500 }}>{q.percentage}%</p>
+                        </div>
+                        <p style={{ fontSize: '10px', color: '#94A3B8', margin: '4px 0 0 0', fontStyle: 'italic' }}>{q.email}</p>
                       </div>
-                      <div style={{ width: '100%', height: '6px', background: '#F3E8FF', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${(q.used / maxTotal) * 100}%`, background: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6', borderRadius: '3px' }} />
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                        <p style={{ fontSize: '11px', color: '#64748B', margin: 0 }}>{q.used}h used of {q.total}h</p>
-                        <p style={{ fontSize: '11px', color: q.percentage > 80 ? '#DC2626' : q.percentage > 50 ? '#F59E0B' : '#8B5CF6', margin: 0, fontWeight: 500 }}>{q.percentage}%</p>
-                      </div>
-                      <p style={{ fontSize: '10px', color: '#94A3B8', margin: '4px 0 0 0', fontStyle: 'italic' }}>{q.email}</p>
-                    </div>
-                  ))
-                })()}
-              </div>
-            )}
+                    ))
+                  })()}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
