@@ -6,6 +6,7 @@ import VisitRecorder from '@/components/VisitRecorder'
 import QRCode from '@/components/QRCode'
 import { CopyableText } from '@/components/CopyableText'
 import { getBaseUrl } from '@/lib/env'
+import Unauthorized from '@/components/Unauthorized'
 
 // Calculate duration between two dates in hours (rounded down to favor customer)
 function calculateDurationHours(startTime: string, endTime: string): string {
@@ -107,6 +108,7 @@ export default function VisitsPage() {
   }
 
   return (
+    <Unauthorized>
     <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
       {/* Page Header */}
       <div style={{ marginBottom: '28px' }}>
@@ -406,5 +408,6 @@ export default function VisitsPage() {
         </div>
       )}
     </main>
+    </Unauthorized>
   )
 }

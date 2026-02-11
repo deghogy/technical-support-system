@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Unauthorized from '@/components/Unauthorized'
 
 interface Quota {
   id: string
@@ -136,6 +137,7 @@ export default function QuotasPageClient() {
   }
 
   return (
+    <Unauthorized>
     <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
       {/* Page Header */}
       <div style={{ marginBottom: '28px' }}>
@@ -460,5 +462,6 @@ export default function QuotasPageClient() {
         </div>
       )}
     </main>
+    </Unauthorized>
   )
 }

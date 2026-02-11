@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { formatDateGMT7, formatDateOnlyGMT7 } from '@/lib/dateFormatter'
+import Unauthorized from '@/components/Unauthorized'
 
 type SortOption = 'newest' | 'oldest' | 'location' | 'status'
 
@@ -104,6 +105,7 @@ export default function HistoryPage() {
   const isRemote = (location: string) => location?.includes('Automation - Boccard Indonesia')
 
   return (
+    <Unauthorized>
     <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1000px' }}>
       {/* Page Header */}
       <div style={{ marginBottom: '28px' }}>
@@ -464,5 +466,6 @@ export default function HistoryPage() {
         </div>
       )}
     </main>
+    </Unauthorized>
   )
 }

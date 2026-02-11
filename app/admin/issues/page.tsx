@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import Unauthorized from '@/components/Unauthorized'
 
 interface Issue {
   id: number
@@ -151,6 +152,7 @@ export default function IssuesPage() {
   }
 
   return (
+    <Unauthorized>
     <main className="container" style={{ paddingTop: '32px', paddingBottom: '48px', maxWidth: '1400px' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
@@ -778,5 +780,6 @@ export default function IssuesPage() {
         </div>
       )}
     </main>
+    </Unauthorized>
   )
 }
